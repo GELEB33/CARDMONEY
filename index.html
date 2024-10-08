@@ -190,6 +190,10 @@
 
     // Сохранение данных игрока в Firebase
     async function savePlayerData() {
+      if (!playerName) {
+        alert("Сначала введите имя игрока!");
+        return;
+      }
       try {
         await setDoc(doc(db, "players", playerName), {
           pigBalance: pigBalance,
@@ -203,6 +207,10 @@
 
     // Загрузка данных игрока из Firebase
     async function loadPlayerData() {
+      if (!playerName) {
+        alert("Сначала введите имя игрока!");
+        return;
+      }
       const docRef = doc(db, "players", playerName);
       const docSnap = await getDoc(docRef);
 
@@ -220,31 +228,30 @@
       }
     }
 
-   // Прокачка клика
-document.getElementById("click-upgrade").onclick = () => {
-  if (pigBalance >= clickUpgradeCost) {
-    pigBalance -= clickUpgradeCost;
-    pigPerClick += 1;
-    clickUpgradeCost = Math.floor(clickUpgradeCost * 1.5); // Увеличение цены прокачки в 1,5 раза
-    updateBalance();
-    updatePigPerClick();
-    // Обновление текста кнопки прокачки клика
-    document.getElementById("click-upgrade").textContent = `Прокачка клика (${clickUpgradeCost} PIG за +1)`;
-  } else {
-    alert("Недостаточно PIG для прокачки!");
-  }
-};
+    // Прокачка клика
+    document.getElementById("click-upgrade").onclick = () => {
+      if (pigBalance >= clickUpgradeCost) {
+        pigBalance -= clickUpgradeCost;
+        pigPerClick++;
+        clickUpgradeCost = Math.floor(clickUpgradeCost * 1.5); // Увеличиваем цену прокачки в 1.5 раза
+        updateBalance();
+        updatePigPerClick();
+        savePlayerData(); // Сохраняем данные после прокачки
+      } else {
+        alert("Недостаточно PIG для улучшения клика!");
+      }
+    };
 
-
-    // Случайный PIG
+    // Получение случайных PIG
     document.getElementById("random-pig").onclick = () => {
       if (pigBalance >= 20000) {
-        const randomAmount = Math.floor(Math.random() * 50000) + 1; // От 1 до 50000
-        pigBalance += randomAmount;
+        const randomPIG = Math.floor(Math.random() * 50001);
+        pigBalance += randomPIG;
+        pigBalance -= 20000; // Снимаем 20000 PIG за покупку
         updateBalance();
-        savePlayerData();
+        savePlayerData(); // Сохраняем данные после получения PIG
       } else {
-        alert("Недостаточно PIG для получения рандомных PIG!");
+        alert("Недостаточно PIG для улучшения!");
       }
     };
 
@@ -252,9 +259,11 @@ document.getElementById("click-upgrade").onclick = () => {
     document.getElementById("buy-pig").onclick = () => {
       if (pigBalance >= pigCost) {
         pigBalance -= pigCost;
-        pigPerClick += 10; // +10 PIG в секунду
+        pigPerClick += 10; // Увеличиваем PIG за клик
+        pigCost = Math.floor(pigCost * 1.5); // Увеличиваем цену свиньи в 1.5 раза
         updateBalance();
-        savePlayerData();
+        updatePigPerClick();
+        savePlayerData(); // Сохраняем данные после покупки свиньи
       } else {
         alert("Недостаточно PIG для покупки свиньи!");
       }
@@ -262,38 +271,32 @@ document.getElementById("click-upgrade").onclick = () => {
 
     // Смена имени игрока
     document.getElementById("name-button").onclick = () => {
-      const newName = prompt("Введите ваше имя:");
-      if (newName) {
-        playerName = newName;
-        updatePlayerNameDisplay();
-        loadPlayerData(); // Загружаем данные игрока из Firebase
-      }
+      playerName = prompt("Введите имя игрока:");
+      updatePlayerNameDisplay();
+      loadPlayerData(); // Загружаем данные после смены имени
     };
 
-    // Открытие и закрытие окна улучшений
+    // Показ модального окна улучшений
     document.getElementById("upgrades-button").onclick = () => {
       document.getElementById("upgrades-modal").style.display = "block";
       document.getElementById("modal-overlay").style.display = "block";
     };
+
+    // Закрытие модального окна улучшений
     document.getElementById("close-upgrades").onclick = () => {
       document.getElementById("upgrades-modal").style.display = "none";
       document.getElementById("modal-overlay").style.display = "none";
     };
 
-    // Инициализация игры
     function resetGame() {
       pigBalance = 0;
       pigPerClick = 1;
+      playerName = "";
       clickUpgradeCost = 100;
       updateBalance();
       updatePigPerClick();
-    }
-
-    window.onload = () => {
-      playerName = prompt("Введите ваше имя:") || "Не установлено";
       updatePlayerNameDisplay();
-      loadPlayerData(); // Загружаем данные игрока при загрузке страницы
-    };
+    }
   </script>
 </body>
 </html>
