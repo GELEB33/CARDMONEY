@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PIG Clicker</title>
+  <style>
+    body {
+      background-image: url('https://i.yapx.ru/YDB8i.jpg');
+      background-size: cover;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    .game-container {
+      border: 5px solid #f5a9a9; /* Рамка вокруг игры */
+      border-radius: 15px;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.7); /* Затемненный фон внутри рамки */
+      display: inline-block;
+    }
+    h1 {
+      font-size: 48px;
+      text-shadow: 2px 2px 0px black;
+      border: 4px solid #f5a9a9; /* Обводка для названия игры */
+      padding: 10px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+    #pig-emoji {
+      width: 150px;
+      height: 150px;
+      background-color: #f5a9a9;
+      border-radius: 50%;
+      position: relative;
+      margin: 20px auto;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 3px solid #a37171; /* Темная обводка вокруг пятачка */
+    }
+    .nose-dot {
+      position: absolute;
+      width: 40px; /* Увеличенный размер точек */
+      height: 40px; /* Увеличенный размер точек */
+      background-color: #402828;
+      border-radius: 50%;
+      border: 5px solid #a37171; /* Яркая обводка точек */
+    }
+    #nose-dot-left {
+      top: 35%;
+      left: 60%; /* Ширина между точками увеличена */
+    }
+    #nose-dot-right {
+      top: 35%;
+      right: 60%; /* Ширина между точками увеличена */
+    }
+    #balance, #player-name, #pig-per-click, #goal, #remaining-to-goal {
+      font-size: 24px;
+      margin: 20px;
+      text-shadow: 1px 1px 0px black;
+    }
+    button {
+      font-size: 18px;
+      margin: 10px;
+      padding: 10px 20px;
+      background-color: #f5a9a9;
+      border: 2px solid #a37171; /* Обводка для кнопок */
+      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+    }
+    button:hover {
+      background-color: #f5a9a9;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      color: black;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+    }
+  </style>
+  <script type="module">
+    // Импортируем Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-firestore.js";
+
+    // Конфигурация Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyA3uXpKy8H45C6HqiyqXECyezRGGpyHu_4",
+      authDomain: "pig-cliker.firebaseapp.com",
+      projectId: "pig-cliker",
+      storageBucket: "pig-cliker.appspot.com",
+      messagingSenderId: "600897676748",
+      appId: "1:600897676748:web:516bde72c600f625c1a969",
+      measurementId: "G-6TDRG8FD6M"
+    };
+
+    // Инициализация Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+  </script>
+</head>
+<body>
+  <div class="game-container">
+    <h1>PIG Clicker</h1>
+    <div id="player-name">Имя: Не установлено</div>
+    <div id="balance">Баланс: 0 PIG</div>
+    <div id="goal">Цель: 1 миллиард PIG</div>
+    <div id="remaining-to-goal">Осталось до цели: 1000000000 PIG</div>
+
+    <!-- Пятачок свиньи с двумя темными точками -->
+    <div id="pig-emoji">
+      <div id="nose-dot-left" class="nose-dot"></div>
+      <div id="nose-dot-right" class="nose-dot"></div>
+    </div>
+    
+    <div id="pig-per-click">За клик: 1 PIG</div>
+
+    <button id="name-button">Сменить имя</button>
+    <button id="upgrades-button">Улучшения</button>
+
+    <div id="modal-overlay"></div>
+
+    <!-- Модальное окно улучшений -->
+    <div id="upgrades-modal" class="modal">
+      <h1>Улучшения</h1>
+      <button id="click-upgrade">Прокачка клика (100 PIG за +1)</button>
+      <button id="random-pig">Рандомные PIG (20000 PIG)</button>
+      <button id="buy-pig">Купить свинью (500000 PIG)</button>
+      <button id="close-upgrades">Закрыть</button>
+    </div>
+  </div>
+
+  <script>
+    let pigBalance = 0;
+    let pigPerClick = 1;
+    let playerName = "";
+    let pigCost = 500000;
+    let goal = 1000000000;
+    let clickUpgradeCost = 100;
+
+    const balanceDisplay = document.getElementById("balance");
+    const pigEmoji = document.getElementById("pig-emoji");
+    const playerNameDisplay = document.getElementById("player-name");
+    const pigPerClickDisplay = document.getElementById("pig-per-click");
+    const goalDisplay = document.getElementById("goal");
+    const remainingToGoalDisplay = document.getElementById("remaining-to-goal");
+
+    function updateBalance() {
+      balanceDisplay.textContent = `Баланс: ${pigBalance} PIG`;
+      remainingToGoalDisplay.textContent = `Осталось до цели: ${goal - pigBalance} PIG`;
+      if (pigBalance >= goal) {
+        alert("Спасибо, что прошли мою игру ПУПС!");
+        resetGame();
+      }
+    }
+
+    function updatePlayerNameDisplay() {
+      playerNameDisplay.textContent = `Имя: ${playerName || "Не установлено"}`;
+    }
+
+    function updatePigPerClick() {
+      pigPerClickDisplay.textContent = `За клик: ${pigPerClick} PIG`;
+    }
+
+    pigEmoji.onclick = () => {
+      pigBalance += pigPerClick;
+      updateBalance();
+      savePlayerData();
+    };
+
+    // Сохранение данных игрока в Firebase
+    async function savePlayerData() {
+      try {
+        await setDoc(doc(db, "players", playerName), {
+          pigBalance: pigBalance,
+          pigPerClick: pigPerClick,
+          clickUpgradeCost: clickUpgradeCost
+        });
+      } catch (e) {
+        console.error("Ошибка при сохранении в Firebase: ", e);
+      }
+    }
+
+    // Загрузка данных игрока из Firebase
+    async function loadPlayerData() {
+      const docRef = doc(db, "players", playerName);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        pigBalance = data.pigBalance;
+        pigPerClick = data.pigPerClick;
+        clickUpgradeCost = data.clickUpgradeCost;
+
+        updateBalance();
+        updatePlayerNameDisplay();
+        updatePigPerClick();
+      } else {
+        console.log("Такого игрока нет в базе данных.");
+      }
+    }
+
+   // Прокачка клика
+document.getElementById("click-upgrade").onclick = () => {
+  if (pigBalance >= clickUpgradeCost) {
+    pigBalance -= clickUpgradeCost;
+    pigPerClick += 1;
+    clickUpgradeCost = Math.floor(clickUpgradeCost * 1.5); // Увеличение цены прокачки в 1,5 раза
+    updateBalance();
+    updatePigPerClick();
+    // Обновление текста кнопки прокачки клика
+    document.getElementById("click-upgrade").textContent = `Прокачка клика (${clickUpgradeCost} PIG за +1)`;
+  } else {
+    alert("Недостаточно PIG для прокачки!");
+  }
+};
+
+
+    // Случайный PIG
+    document.getElementById("random-pig").onclick = () => {
+      if (pigBalance >= 20000) {
+        const randomAmount = Math.floor(Math.random() * 50000) + 1; // От 1 до 50000
+        pigBalance += randomAmount;
+        updateBalance();
+        savePlayerData();
+      } else {
+        alert("Недостаточно PIG для получения рандомных PIG!");
+      }
+    };
+
+    // Купить свинью
+    document.getElementById("buy-pig").onclick = () => {
+      if (pigBalance >= pigCost) {
+        pigBalance -= pigCost;
+        pigPerClick += 10; // +10 PIG в секунду
+        updateBalance();
+        savePlayerData();
+      } else {
+        alert("Недостаточно PIG для покупки свиньи!");
+      }
+    };
+
+    // Смена имени игрока
+    document.getElementById("name-button").onclick = () => {
+      const newName = prompt("Введите ваше имя:");
+      if (newName) {
+        playerName = newName;
+        updatePlayerNameDisplay();
+        loadPlayerData(); // Загружаем данные игрока из Firebase
+      }
+    };
+
+    // Открытие и закрытие окна улучшений
+    document.getElementById("upgrades-button").onclick = () => {
+      document.getElementById("upgrades-modal").style.display = "block";
+      document.getElementById("modal-overlay").style.display = "block";
+    };
+    document.getElementById("close-upgrades").onclick = () => {
+      document.getElementById("upgrades-modal").style.display = "none";
+      document.getElementById("modal-overlay").style.display = "none";
+    };
+
+    // Инициализация игры
+    function resetGame() {
+      pigBalance = 0;
+      pigPerClick = 1;
+      clickUpgradeCost = 100;
+      updateBalance();
+      updatePigPerClick();
+    }
+
+    window.onload = () => {
+      playerName = prompt("Введите ваше имя:") || "Не установлено";
+      updatePlayerNameDisplay();
+      loadPlayerData(); // Загружаем данные игрока при загрузке страницы
+    };
+  </script>
+</body>
+</html>
