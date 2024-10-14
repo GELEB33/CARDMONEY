@@ -63,7 +63,7 @@
     #nose-dot-left { top: 35%; left: 60%; }
     #nose-dot-right { top: 35%; right: 60%; }
 
-    #balance, #player-name, #pig-per-click {
+    #balance, #player-name, #pig-per-click, #play-time {
       font-size: 24px;
       margin: 20px;
       text-shadow: 1px 1px 0px black;
@@ -131,7 +131,6 @@
       display: none;
       width: 90%;
       max-width: 900px;
-      background: url('https://i.yapx.ru/YEIk4.jpg') center/cover;
       padding: 20px;
       color: black;
       text-align: center;
@@ -147,26 +146,17 @@
     #manure-counter {
       color: white;
     }
-    
+
     #shop-modal {
       background-image: url('https://i.yapx.ru/YEaP6.jpg');
       color: white;
     }
-    
-    #shop-modal h1 {
-      color: white;
-    }
-    
-    #manure-help-button {
-      background-color: #f5a9a9;
-      color: black;
-    }
-    
+
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
     }
-    
+
     @keyframes clickEffect {
       0% { transform: scale(1); }
       50% { transform: scale(1.1); background-color: #c76c6c; }
@@ -177,11 +167,11 @@
       h1 {
         font-size: 32px;
       }
-      
-      #balance, #player-name, #pig-per-click {
+
+      #balance, #player-name, #pig-per-click, #play-time {
         font-size: 18px;
       }
-      
+
       button {
         font-size: 16px;
       }
@@ -189,6 +179,20 @@
       #fact {
         font-size: 16px;
       }
+    }
+
+    #competitor-button {
+      display: none; /* Кнопка будет скрыта по умолчанию */
+      font-size: 18px;
+      margin: 10px;
+      padding: 10px 20px;
+      background-color: #f5a9a9;
+      border: 2px solid #a37171;
+      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+      transition: background-color 0.3s, transform 0.2s;
+      width: calc(100% - 40px);
     }
   </style>
 </head>
@@ -198,6 +202,7 @@
     <div id="player-name">Имя: Не установлено</div>
     <div id="balance">Баланс: 0 pigcoin</div>
     <div id="pig-per-click">За клик: 1 pigcoin</div>
+    <div id="play-time">Время в игре: 0:00</div> <!-- Элемент для отображения времени -->
     <div id="fact">Факт: В мире почти два миллиарда свиней!</div>
 
     <div id="pig-emoji">
@@ -210,7 +215,8 @@
     <button id="shop-button">Магазин</button>
     <button id="help-button">?</button>
     <button id="lottery-button">Свиная лотерея</button>
-    
+    <button id="competitor-button">Конкурент</button> <!-- Кнопка конкурента -->
+
     <p style="color: #fff;">*Шанс 1% потерять часть кликов и свиней, будьте осторожнее!</p>
 
     <div id="modal-overlay"></div>
@@ -293,12 +299,18 @@
       shovel3: localStorage.getItem('shovel3') ? parseInt(localStorage.getItem('shovel3')) : 0
     };
 
+    let totalPlayTime = localStorage.getItem('totalPlayTime') ? parseInt(localStorage.getItem('totalPlayTime')) : 0; // Общее время игры
+    let johnsonPigCount = localStorage.getItem('johnsonPigCount') ? parseInt(localStorage.getItem('johnsonPigCount')) : 15000; // Количество свиней у Джонсона
+    let johnsonFarmActive = false; // Статус фермы Джонсона
+    let johnsonTimer;
+
     const balanceDisplay = document.getElementById("balance");
     const pigEmoji = document.getElementById("pig-emoji");
     const playerNameDisplay = document.getElementById("player-name");
     const pigPerClickDisplay = document.getElementById("pig-per-click");
     const pigCountDisplay = document.getElementById("pig-count");
     const manureCounterDisplay = document.getElementById("manure-counter");
+    const playTimeDisplay = document.getElementById("play-time");
     const factDisplay = document.getElementById("fact");
     const upgradesModal = document.getElementById("upgrades-modal");
     const farmWindow = document.getElementById("farm-window");
@@ -318,6 +330,13 @@
       if (pigCount >= 2000000000) {
         showCongratsModal();
       }
+    }
+
+    function updatePlayTime() {
+      const minutes = Math.floor(totalPlayTime / 60);
+      const seconds = totalPlayTime % 60;
+      playTimeDisplay.textContent = `Время в игре: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+      localStorage.setItem('totalPlayTime', totalPlayTime); // Сохраняем время в игре
     }
 
     function updateUpgradeButton() {
@@ -369,14 +388,18 @@
       }
     }
 
-    setInterval(earnPigCoinFromPigs, 1000);
+    setInterval(() => {
+      earnPigCoinFromPigs();
+      totalPlayTime++; // Увеличиваем общее время на 1 секунду
+      updatePlayTime();
+    }, 1000);
 
     function earnPigCoinFromPigs() {
       if (pigCount > 0) {
         pigBalance += pigCount * 100; 
         updateBalance();
         
-        if (manureCount > 0) {
+                if (manureCount > 0) {
           pigBalance -= manureCount; // Каждая единица навоза вычитает 1 pigcoin
           updateBalance();
         }
@@ -408,22 +431,21 @@
         const randomNum = Math.random();
         let earnedCoins = 0;
 
-        if (randomNum < 0.35) { // 35% вероятность
+        if (randomNum < 0.35) {
           earnedCoins = 5000; 
-        } else if (randomNum < 0.60) { // 25% вероятность (35% + 25%)
+        } else if (randomNum < 0.60) {
           earnedCoins = 10000; 
-        } else if (randomNum < 0.80) { // 20% вероятность (60% + 20%)
+        } else if (randomNum < 0.80) {
           earnedCoins = 25000; 
-        } else if (randomNum < 0.90) { // 10% вероятность (80% + 10%)
+        } else if (randomNum < 0.90) {
           earnedCoins = 50000; 
-        } else if (randomNum < 0.95) { // 5% вероятность (90% + 5%)
-                    earnedCoins = 150000; 
-        } else if (randomNum < 0.98) { // 3% вероятность (95% + 3%)
+        } else if (randomNum < 0.95) {
+          earnedCoins = 150000; 
+        } else if (randomNum < 0.98) {
           earnedCoins = 1000000; 
-        } else if (randomNum < 0.985) { // 0.5% вероятность (98% + 0.5%)
+        } else if (randomNum < 0.985) {
           earnedCoins = 10000000; 
         } else {
-          // Пандемия
           alert("Пандемия! У вас списано 10 кликов и 2 свиньи.");
           pigPerClick = Math.max(pigPerClick - 10, 0);
           pigCount = Math.max(pigCount - 2, 0);
@@ -438,6 +460,73 @@
         alert("Недостаточно pigcoin для свиной лотереи!");
       }
     };
+
+    // Мистер Джонсон функциональность
+    function startPlayTimeTracking() {
+      setInterval(() => {
+        totalPlayTime += 1; // Добавляем каждую секунду
+        updatePlayTime();
+
+        if (totalPlayTime >= 10800 && !johnsonFarmActive) { // 3 часа
+          showJohnsonArrival();
+        }
+      }, 1000);
+    }
+
+    function showJohnsonArrival() {
+      alert("О нет, похоже, мистер Джонсон вернулся на свою ферму и хочет помешать мне стать самым крупным свиным фермером!! Надо его обогнать и показать, кто здесь папа свин!");
+      document.getElementById("competitor-button").style.display = "block"; // Показать кнопку для соревнования
+    }
+
+    document.getElementById("competitor-button").onclick = () => {
+      johnsonFarmActive = true;
+      johnsonTimer = setInterval(updateJohnsonPigCount, 2000); // Каждые 2 секунды у него +1 свинья
+      alert("Ферма мистера Джонсона: Свиней - " + johnsonPigCount);
+      checkJohnsonStatus(); // Проверка статуса сразу после начала
+    }
+
+    function updateJohnsonPigCount() {
+      johnsonPigCount++;
+      console.log(`Количество свиней у мистера Джонсона: ${johnsonPigCount}`);
+      checkJohnsonStatus();
+    }
+
+    function checkJohnsonStatus() {
+      if (pigCount > johnsonPigCount) {
+        clearInterval(johnsonTimer); 
+        alert("Есть! Джонсон позади, осталось дождаться вручения свинного кубка и я победил!");
+        startJohnsonTimer();
+      }
+    }
+
+    function startJohnsonTimer() {
+      let countdown = 300; // 5 минут таймер
+      const timerDisplay = setInterval(() => {
+        if (countdown <= 0) {
+          clearInterval(timerDisplay);
+          johnsonPigCount += 1; // Теперь у Джонсона 1 свинья в секунду
+          alert("У мистера Джонсона теперь 1 свинья в секунду!");
+          return;
+        }
+        countdown--;
+      }, 1000);
+      
+      setInterval(checkVictory, 1000);
+    }
+
+    function checkVictory() {
+      if (johnsonPigCount - pigCount <= 50) {
+        alert("ПОЗДРАВЛЯЮ, МИСТЕР ДЖОНС ПОВЕРЖЕН, ТЫ ЗАСЛУЖИЛ ОТДЫХ И ПОХВАЛУ, А КУБОК ЭТО ДУХОВНОЕ СОКРОВИЩЕ ЭТОЙ ИГРЫ!");
+        johnsonFarmActive = false;
+        johnsonPigCount = 15000; // Сброс числа свиней у Джонсона
+        document.getElementById("competitor-button").style.display = "none"; // Скрыть кнопку
+      } else {
+        localStorage.setItem('johnsonPigCount', johnsonPigCount); // Обновить количество свиней у Джонсона
+      }
+    }
+
+    // Запуск отслеживания времени при загрузке
+    startPlayTimeTracking();
 
     document.getElementById("click-upgrade").onclick = () => {
       if (pigBalance >= clickUpgradeCost) {
@@ -537,6 +626,7 @@
       }
     };
 
+    // Код для модальных окон и закрытия
     document.getElementById("shop-button").onclick = () => {
       shopModal.style.display = "block";
       shopModal.style.opacity = 1; 
@@ -645,7 +735,15 @@
       updatePlayerNameDisplay();
       updateFarmDisplay();
       updatePigPerClick();
+      updatePlayTime();
       document.getElementById("barn-upgrade-cost").textContent = barnUpgradeCost; // Обновляем цену на улучшение
+
+      // Восстановление состояния из localStorage
+      pigBalance = localStorage.getItem('pigBalance') ? parseInt(localStorage.getItem('pigBalance')) : 0;
+      pigCount = localStorage.getItem('pigCount') ? parseInt(localStorage.getItem('pigCount')) : 0;
+      totalPlayTime = localStorage.getItem('totalPlayTime') ? parseInt(localStorage.getItem('totalPlayTime')) : 0; // Общее время игры
+      johnsonPigCount = localStorage.getItem('johnsonPigCount') ? parseInt(localStorage.getItem('johnsonPigCount')) : 15000; // Количество свиней у Джонсона
+      updatePlayTime();
     };
 
     window.onbeforeunload = () => {
@@ -657,9 +755,11 @@
       localStorage.setItem('clickUpgradeCost', clickUpgradeCost);
       localStorage.setItem('barnUpgradeCost', barnUpgradeCost);
       localStorage.setItem('manureCount', manureCount);
-      localStorage.setItem('shovel1', shovels.shovel1); // Сохранение количества лопаты 1
-      localStorage.setItem('shovel2', shovels.shovel2); // Сохранение количества лопаты 2
-      localStorage.setItem('shovel3', shovels.shovel3); // Сохранение количества лопаты 3
+      localStorage.setItem('shovel1', shovels.shovel1);
+      localStorage.setItem('shovel2', shovels.shovel2);
+      localStorage.setItem('shovel3', shovels.shovel3);
+      localStorage.setItem('totalPlayTime', totalPlayTime); // Сохранение времени
+      localStorage.setItem('johnsonPigCount', johnsonPigCount); // Сохранение свиней у Джонсона
     };
 
     function animatePig() {
@@ -674,17 +774,7 @@
       congratsModal.style.opacity = 1; 
     }
 
-    // Восстановление состояния из localStorage
-    shovels = {
-      shovel1: localStorage.getItem('shovel1') ? parseInt(localStorage.getItem('shovel1')) : 0,
-      shovel2: localStorage.getItem('shovel2') ? parseInt(localStorage.getItem('shovel2')) : 0,
-      shovel3: localStorage.getItem('shovel3') ? parseInt(localStorage.getItem('shovel3')) : 0,
-    };
-
-    if (shovels) {
-      shovels = shovels;
-    }
-
   </script>
 </body>
 </html>
+
