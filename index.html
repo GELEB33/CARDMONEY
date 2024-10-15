@@ -147,7 +147,7 @@
 
     #farm-window {
       display: none;
-      background-image: url('https://i.yapx.ru/YEIk4.jpg'); /* Для фермы */
+      background-image: url('https://i.yapx.ru/YDB8i.jpg'); /* Для фермы */
       background-size: cover;
       padding: 20px;
       color: white;
@@ -267,6 +267,7 @@
     let johnsonFarmActive = false; // Статус фермы Джонсона
     let johnsonTimer;
     let johnsonShown = localStorage.getItem('johnsonShown') ? JSON.parse(localStorage.getItem('johnsonShown')) : false; // Проверка отображения Джонсона
+    let competitorButtonVisible = localStorage.getItem('competitorButtonVisible') ? JSON.parse(localStorage.getItem('competitorButtonVisible')) : false; // Проверка видимости кнопки "Конкурент"
 
     const balanceDisplay = document.getElementById("balance");
     const pigEmoji = document.getElementById("pig-emoji");
@@ -283,6 +284,12 @@
     const manureHelpModal = document.getElementById("manure-help-modal");
     const congratsModal = document.getElementById("congrats-modal");
     const farmTimerDisplay = document.getElementById("farm-timer");
+    const competitorButton = document.getElementById("competitor-button");
+
+    // Показать кнопку "Конкурент", если она должна быть видима
+    if (competitorButtonVisible) {
+      competitorButton.style.display = "block";
+    }
 
     function updateBalance() {
       balanceDisplay.textContent = `Баланс: ${pigBalance} pigcoin`;
@@ -350,7 +357,7 @@
         pigBalance += pigsToSpawn * 100; 
         updateFarmDisplay();
         updateBalance();
-        timeUntilNextPig = 3600;
+                timeUntilNextPig = 3600;
       }
     }
 
@@ -366,7 +373,7 @@
     }, 1000);
 
     function earnPigCoinFromPigs() {
-            if (pigCount > 0) {
+      if (pigCount > 0) {
         pigBalance += pigCount * 100; 
         updateBalance();
         
@@ -438,11 +445,13 @@
         alert("О нет, похоже, мистер Джонсон вернулся на свою ферму и хочет помешать мне стать самым крупным свиным фермером!! Надо его обогнать и показать, кто здесь папа свин!");
         johnsonShown = true; // Устанавливаем флаг о том, что Джонсон был показан
         localStorage.setItem('johnsonShown', true); // Сохраняем состояние
-        document.getElementById("competitor-button").style.display = "block"; // Показать кнопку для соревнования
+        competitorButtonVisible = true; // Устанавливаем флаг видимости кнопки "Конкурент"
+        localStorage.setItem('competitorButtonVisible', true); // Сохраняем видимость кнопки
+        competitorButton.style.display = "block"; // Показать кнопку для соревнования
       }
     }
 
-    document.getElementById("competitor-button").onclick = () => {
+    competitorButton.onclick = () => {
       johnsonFarmActive = true;
       johnsonTimer = setInterval(updateJohnsonPigCount, 2000); // Каждые 2 секунды у него +1 свинья
       alert("Ферма мистера Джонсона: Свиней - " + johnsonPigCount);
@@ -483,7 +492,9 @@
         alert("ПОЗДРАВЛЯЮ, МИСТЕР ДЖОНС ПОВЕРЖЕН, ТЫ ЗАСЛУЖИЛ ОТДЫХ И ПОХВАЛУ, А КУБОК ЭТО ДУХОВНОЕ СОКРОВИЩЕ ЭТОЙ ИГРЫ!");
         johnsonFarmActive = false;
         johnsonPigCount = 15000; // Сброс числа свиней у Джонсона
-        document.getElementById("competitor-button").style.display = "none"; // Скрыть кнопку
+        competitorButton.style.display = "none"; // Скрыть кнопку
+        competitorButtonVisible = false; // Устанавливаем флаг видимости кнопки "Конкурент" в false
+        localStorage.setItem('competitorButtonVisible', false); // Сохраняем статус
       }
     }
 
@@ -725,6 +736,12 @@
       totalPlayTime = localStorage.getItem('totalPlayTime') ? parseInt(localStorage.getItem('totalPlayTime')) : 0; // Общее время игры
       johnsonPigCount = localStorage.getItem('johnsonPigCount') ? parseInt(localStorage.getItem('johnsonPigCount')) : 15000; // Количество свиней у Джонсона
       johnsonShown = localStorage.getItem('johnsonShown') ? JSON.parse(localStorage.getItem('johnsonShown')) : false; // Проверка отображения Джонсона
+      competitorButtonVisible = localStorage.getItem('competitorButtonVisible') ? JSON.parse(localStorage.getItem('competitorButtonVisible')) : false; // Проверка видимости кнопки "Конкурент"
+
+      // Показать кнопку "Конкурент", если она должна быть видима
+      if (competitorButtonVisible) {
+        competitorButton.style.display = "block";
+      }
 
       // Восстановление улучшений
       clickUpgradeCost = localStorage.getItem('clickUpgradeCost') ? parseInt(localStorage.getItem('clickUpgradeCost')) : 100;
@@ -751,6 +768,7 @@
       localStorage.setItem('totalPlayTime', totalPlayTime); // Сохранение времени
       localStorage.setItem('johnsonPigCount', johnsonPigCount); // Сохранение свиней у Джонсона
       localStorage.setItem('johnsonShown', johnsonShown); // Сохранение статуса Джонсона
+      localStorage.setItem('competitorButtonVisible', competitorButtonVisible); // Сохранение статуса отображения кнопки "Конкурент"
     };
 
     function animatePig() {
@@ -764,8 +782,6 @@
       congratsModal.style.display = "block";
       congratsModal.style.opacity = 1; 
     }
-
   </script>
 </body>
 </html>
-
