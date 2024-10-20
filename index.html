@@ -140,7 +140,6 @@
             margin-top: 20px;
             color: #27ae60; /* Зеленый цвет для успешного сообщения */
         }
-
     </style>
 </head>
 <body>
@@ -162,13 +161,12 @@
     <div class="success-message" id="successMessage">Успешно! Ваши рубли будут отправлены в течение трех суток.</div>
 
     <script>
-        // Восстановление баланса из локального хранилища
-        let balance = parseFloat(localStorage.getItem('balance')) || 0;
+        // Установка начального баланса
+        let balance = 0;
 
         // Обновление отображения баланса
         function updateBalance() {
             document.querySelector('.balance').textContent = `БАЛАНС: ${balance.toFixed(2)} ₽`;
-            localStorage.setItem('balance', balance); // Сохранение баланса в локальном хранилище
         }
 
         // Функция для добавления значка рубля
@@ -179,7 +177,7 @@
             ruble.style.top = `${Math.random() * 270}px`; // Генерация случайного положения по вертикали
             ruble.style.left = `${Math.random() * 270}px`; // Генерация случайного положения по горизонтали
             ruble.onclick = function() {
-                balance += 0.25; // Увеличиваем баланс
+                balance += 1; // Увеличиваем баланс на 1 рубль
                 updateBalance(); // Обновляем отображение баланса
                 this.remove(); // Удаляем значок после нажатия
             };
