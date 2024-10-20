@@ -161,12 +161,13 @@
     <div class="success-message" id="successMessage">Успешно! Ваши рубли будут отправлены в течение трех суток.</div>
 
     <script>
-        // Установка начального баланса
-        let balance = 0;
+        // Восстановление баланса из локального хранилища
+        let balance = parseFloat(localStorage.getItem('balance')) || 0;
 
         // Обновление отображения баланса
         function updateBalance() {
             document.querySelector('.balance').textContent = `БАЛАНС: ${balance.toFixed(2)} ₽`;
+            localStorage.setItem('balance', balance); // Сохранение баланса в локальном хранилище
         }
 
         // Функция для добавления значка рубля
@@ -177,7 +178,7 @@
             ruble.style.top = `${Math.random() * 270}px`; // Генерация случайного положения по вертикали
             ruble.style.left = `${Math.random() * 270}px`; // Генерация случайного положения по горизонтали
             ruble.onclick = function() {
-                balance += 1; // Увеличиваем баланс на 1 рубль
+                balance += 0.8; // Увеличиваем баланс на 0.8 рубля
                 updateBalance(); // Обновляем отображение баланса
                 this.remove(); // Удаляем значок после нажатия
             };
