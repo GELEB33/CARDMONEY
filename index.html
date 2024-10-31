@@ -2,220 +2,194 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мой сайт</title>
+    <meta name="viewport" content="width=device-width, initial="width=device-width, initial-scale=1.0">
+    <title>Игра о Завоеваниях</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #ffffff, #f0f4f8, #e1f5fe);
-            animation: gradient 10s ease infinite; /* Плавный фон */
-            text-align: center; /* Центрируем текст по умолчанию */
+            text-align: center;
+            background-color: #f4f4f4;
         }
-
-        @keyframes gradient {
-            0% { background-position: 0% 100%; }
-            100% { background-position: 100% 0%; }
-        }
-
-        .header {
-            background: linear-gradient(to right, #2ecc71, #27ae60);
-            color: #000;
-            padding: 20px;
-            border: 2px solid #000; /* Черная обводка */
-            border-radius: 10px; /* Скругление углов */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            margin: 20px;
-            animation: fadeIn 1s; /* Анимация появления заголовка */
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .title {
-            font-size: 36px;
-            margin: 0;
-        }
-
-        .balance {
-            font-size: 24px;
-            margin-top: 10px;
-        }
-
-        .message {
-            font-size: 20px;
-            margin-top: 10px;
-        }
-
-        .container {
-            position: relative;
-            width: 300px;
-            height: 300px;
-            border: 4px solid #ffa000; /* Яркая обводка */
-            border-radius: 15px; /* Скругление углов */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(7, 50px);
+            grid-template-rows: repeat(7, 50px);
+            gap: 2px;
             margin: 20px auto;
-            overflow: hidden; /* Скрываем элементы, выходящие за пределы контейнера */
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            background-color: rgba(255, 255, 255, 0.8); /* Полупрозрачный фон */
         }
-
-        .ruble {
-            position: absolute;
-            font-size: 32px;
-            cursor: pointer;
-            user-select: none; /* Запрет на выделение текста */
-            opacity: 0; /* По умолчанию невидим */
-            animation: appear 0.5s forwards; /* Анимация появления рубля */
-        }
-
-        @keyframes appear {
-            from {
-                opacity: 0;
-                transform: translateY(-20px); /* Начальное смещение вверх */
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0); /* К концу возвращается на место */
-            }
-        }
-
-        .withdraw-button {
-            background-color: #ff4757; /* Красный цвет */
-            color: #fff;
-            border: none;
-            border-radius: 10px; /* Скругление углов */
-            padding: 10px 20px;
-            font-size: 18px;
-            cursor: pointer;
-            margin: 20px 0;
+        .cell {
+            width: 50px;
+            height: 50px;
+            border: 2px solid black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            background-color: #ccc;
             transition: background-color 0.3s;
         }
-
-        .withdraw-button:hover {
-            background-color: #ff6b81; /* Более светлый красный при наведении */
-        }
-
-        .modal {
-            display: none; /* Скрыто по умолчанию */
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            border: 2px solid #000;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            padding: 20px;
-            z-index: 1000;
-        }
-
-        .modal input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 2px solid #ccc;
-            border-radius: 5px;
-        }
-
-        .modal button {
-            background-color: #27ae60; /* Зеленый цвет */
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .modal button:hover {
-            background-color: #2ecc71; /* Более светлый зеленый при наведении */
-        }
-
-        .success-message {
-            display: none; /* Скрыто по умолчанию */
-            animation: fadeIn 1s; /* Анимация появления сообщения */
-            margin-top: 20px;
-            color: #27ae60; /* Зеленый цвет для успешного сообщения */
+        button {
+            margin: 10px;
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <h1 class="title">BUY RUB</h1>
-        <span class="balance">БАЛАНС: 0 ₽</span>
-        <div class="message">Заработок без вложений</div>
-    </header>
-    <div class="container" id="rubleContainer"></div>
-    <button class="withdraw-button" id="withdrawBtn">Вывести</button>
-    
-    <div class="modal" id="withdrawModal">
-        <h3>Введите сумму вывода и номер телефона</h3>
-        <input type="number" id="withdrawAmount" placeholder="Сумма вывода" min="2000" />
-        <input type="text" id="phoneNumber" placeholder="Номер телефона" />
-        <button id="confirmWithdraw">Подтвердить</button>
+    <h1>Игра о Завоеваниях</h1>
+    <div class="grid" id="grid"></div>
+    <div>
+        <button id="startButton" onclick="startGame()">Начать игру</button>
+        <button id="nextTurnButton" onclick="nextTurn()">Следующий ход</button>
+        <button id="buyPeasantButton" onclick="buyPeasant()">Купить крестьянина (10 монет)</button>
+        <button id="buyFortressButton" onclick="buyFortress()">Купить крепость (15 монет)</button>
+        <button id="buyWarriorButton" onclick="buyWarrior()">Купить воина (20 монет)</button>
+        <button id="buyFarmButton" onclick="buyFarm()">Купить ферму (20 монет)</button>
     </div>
-
-    <div class="success-message" id="successMessage">Успешно! Ваши рубли будут отправлены в течение трех суток.</div>
+    <h2>Баланс Игрока 1: <span id="balance1">20</span></h2>
+    <h2>Баланс Игрока 2: <span id="balance2">20</span></h2>
 
     <script>
-        // Восстановление баланса из локального хранилища
-        let balance = parseFloat(localStorage.getItem('balance')) || 0;
+        const gridSize = 7;
+        let grid = [];
+        let turn = 0;
+        let balances = [20, 20];
+        let peasants = [0, 0];
+        let farms = [0, 0];
+        let cellsOccupied = Array.from({ length: gridSize }, () => Array(gridSize).fill(null));
+        let hasClaimedThisTurn = false; // Переменная для отслеживания захвата клетки за ход
 
-        // Обновление отображения баланса
-        function updateBalance() {
-            document.querySelector('.balance').textContent = `БАЛАНС: ${balance.toFixed(2)} ₽`;
-            localStorage.setItem('balance', balance); // Сохранение баланса в локальном хранилище
+        function createGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            for (let i = 0; i < gridSize; i++) {
+                grid[i] = [];
+                for (let j = 0; j < gridSize; j++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.onclick = () => handleCellClick(i, j);
+                    gridElement.appendChild(cell);
+                    grid[i][j] = cell;
+                }
+            }
         }
 
-        // Функция для добавления значка рубля
-        function addRuble() {
-            const ruble = document.createElement('div');
-            ruble.textContent = '₽';
-            ruble.className = 'ruble';
-            ruble.style.top = `${Math.random() * 270}px`; // Генерация случайного положения по вертикали
-            ruble.style.left = `${Math.random() * 270}px`; // Генерация случайного положения по горизонтали
-            ruble.onclick = function() {
-                balance += 0.8; // Увеличиваем баланс на 0.8 рубля
-                updateBalance(); // Обновляем отображение баланса
-                this.remove(); // Удаляем значок после нажатия
-            };
-            document.getElementById('rubleContainer').appendChild(ruble);
-            setTimeout(() => ruble.remove(), 2000); // Удаляем значок через 2 секунды, если на него не нажали
+        function startGame() {
+            createGrid();
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    cellsOccupied[i][j] = null;
+                    grid[i][j].innerHTML = '';
+                    grid[i][j].style.backgroundColor = '#ccc';
+                }
+            }
+            placeRandomCells();
+            updateBalances();
+            hasClaimedThisTurn = false; // Сбрасываем флаг при старте игры
         }
 
-        // Функция для создания значков рубля каждые 1.5 секунды
-        setInterval(addRuble, 1500);
-        updateBalance(); // Обновляем баланс при загрузке страницы
-
-        // Обработчик события для кнопки "Вывести"
-        document.getElementById('withdrawBtn').onclick = function() {
-            if (balance < 2000) {
-                alert('Минимальная сумма вывода 2000 рублей.');
-            } else {
-                document.getElementById('withdrawModal').style.display = 'block'; // Показываем модальное окно
+        function placeRandomCells() {
+            const colors = ['🟩', '🟨']; // Зеленый и желтый
+            for (let i = 0; i < 2; i++) {
+                let x, y;
+                do {
+                    x = Math.floor(Math.random() * gridSize);
+                    y = Math.floor(Math.random() * gridSize);
+                } while (cellsOccupied[x][y] !== null);
+                grid[x][y].innerHTML = colors[i];
+                cellsOccupied[x][y] = colors[i];
             }
-        };
+        }
 
-        // Обработчик события для подтверждения вывода
-        document.getElementById('confirmWithdraw').onclick = function() {
-            const amount = parseFloat(document.getElementById('withdrawAmount').value);
-            const phone = document.getElementById('phoneNumber').value;
+        function nextTurn() {
+            turn = (turn + 1) % 2;
+            hasClaimedThisTurn = false; // Сбрасываем переменную для нового хода
+            updateBalances();
+        }
 
-            if (amount >= 2000 && amount <= balance && phone) {
-                balance -= amount; // Списываем сумму с баланса
-                updateBalance(); // Обновляем отображение баланса
-                document.getElementById('withdrawModal').style.display = 'none'; // Закрываем модальное окно
-                document.getElementById('successMessage').style.display = 'block'; // Показываем сообщение об успехе
-                setTimeout(() => {
-                    document.getElementById('successMessage').style.display = 'none'; // Скрываем сообщение через 3 секунды
-                }, 3000);
-            } else {
-                alert('Пожалуйста, проверьте введенные данные.');
+        function handleCellClick(i, j) {
+            const currentColor = turn === 0 ? '🟩' : '🟨'; // Цвет текущего игрока
+
+            // Проверяем, может ли игрок захватить клетку
+            if (!hasClaimedThisTurn && cellsOccupied[i][j] === null && canClaimCell(i, j, currentColor)) {
+                cellsOccupied[i][j] = currentColor;
+                grid[i][j].innerHTML = currentColor;
+                hasClaimedThisTurn = true; // Игрок захватил клетку в этом ходе
+                updateBalances();
             }
-        };
+        }
+
+        function canClaimCell(i, j, color) {
+            const directions = [
+                [0, 1], [1, 0], [0, -1], [-1, 0]
+            ];
+            for (let [dx, dy] of directions) {
+                const ni = i + dx;
+                const nj = j + dy;
+                if (ni >= 0 && ni < gridSize && nj >= 0 && nj < gridSize && cellsOccupied[ni][nj] === color) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function updateBalances() {
+            const balance1 = document.getElementById('balance1');
+            const balance2 = document.getElementById('balance2');
+            balance1.textContent = balances[0];
+            balance2.textContent = balances[1];
+
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (cellsOccupied[i][j] === '🟩') {
+                        balances[0] += 1; // +1 к балансу Игрока 1 за захваченную клетку
+                    } else if (cellsOccupied[i][j] === '🟨') {
+                        balances[1] += 1; // +1 к балансу Игрока 2 за захваченную клетку
+                    }
+                }
+            }
+        }
+
+        function buyPeasant() {
+            if (balances[turn] >= 10) {
+                balances[turn] -= 10;
+                peasants[turn]++;
+                alert("Крестьянин куплен!");
+                updateBalances();
+            } else {
+                alert("Недостаточно монет для покупки крестьянина.");
+            }
+        }
+
+        function buyFortress() {
+            if (balances[turn] >= 15) {
+                balances[turn] -= 15;
+                alert("Крепость куплена!");
+                updateBalances();
+            } else {
+                alert("Недостаточно монет для покупки крепости.");
+            }
+        }
+
+        function buyWarrior() {
+            if (balances[turn] >= 20) {
+                balances[turn] -= 20;
+                alert("Воин куплен!");
+                updateBalances();
+            } else {
+                alert("Недостаточно монет для покупки воина.");
+            }
+        }
+
+        function buyFarm() {
+            if (balances[turn] >= 20) {
+                balances[turn] -= 20;
+                alert("Ферма куплена!");
+                updateBalances();
+            } else {
+                alert("Недостаточно монет для покупки фермы.");
+            }
+        }
+
+        startGame();
     </script>
 </body>
 </html>
