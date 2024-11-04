@@ -1,195 +1,329 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial="width=device-width, initial-scale=1.0">
-    <title>Игра о Завоеваниях</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра про ферму: Выращивание пшеницы</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(7, 50px);
-            grid-template-rows: repeat(7, 50px);
-            gap: 2px;
-            margin: 20px auto;
-        }
-        .cell {
-            width: 50px;
-            height: 50px;
-            border: 2px solid black;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            font-size: 24px;
-            background-color: #ccc;
-            transition: background-color 0.3s;
+            background-color: #f0e5d7;
+            color: #333;
+            margin: 0;
+            padding: 20px;
         }
-        button {
-            margin: 10px;
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
         }
+
+        #main-menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #4cae4c;
+        }
+
+        #gameContainer,
+        #fieldContainer {
+            display: none;
+            border: 2px solid #8b5a2b;
+            border-radius: 10px;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            font-weight: bold;
+            position: relative;
+        }
+
+        #field {
+            display: grid;
+            grid-template-columns: repeat(10, 30px); /* 10 колонок */
+            gap: 2px; /* Промежуток между квадратами */
+        }
+
+        .square {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #8b5a2b;
+            display: inline-block;
+            background-color: #d1b353; /* Коричневая земля */
+            position: relative;
+        }
+
+        .planted {
+            background-color: #c4d600; /* Цвет для посаженной пшеницы */
+            position: relative;
+        }
+
+        .tilled {
+            background-color: #8b4513; /* Темно-коричневая для вспаханной земли */
+        }
+
+        .crop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            font-size: 20px; /* Размер эмодзи пшеницы */
+            line-height: 30px; /* Центрирование эмодзи в квадрате */
+            text-align: center;
+        }
+
+        .field-info {
+            margin-top: 10px;
+        }
+
+        #timer {
+            font-size: 1.2rem;
+            color: #ff4500; /* Цвет для таймера */
+            margin-top: 10px;
+        }
+
+        #yearDisplay {
+            margin: 10px 0;
+        }
+
     </style>
 </head>
+
 <body>
-    <h1>Игра о Завоеваниях</h1>
-    <div class="grid" id="grid"></div>
-    <div>
-        <button id="startButton" onclick="startGame()">Начать игру</button>
-        <button id="nextTurnButton" onclick="nextTurn()">Следующий ход</button>
-        <button id="buyPeasantButton" onclick="buyPeasant()">Купить крестьянина (10 монет)</button>
-        <button id="buyFortressButton" onclick="buyFortress()">Купить крепость (15 монет)</button>
-        <button id="buyWarriorButton" onclick="buyWarrior()">Купить воина (20 монет)</button>
-        <button id="buyFarmButton" onclick="buyFarm()">Купить ферму (20 монет)</button>
+    <h1>Ферма: Выращивание пшеницы 🌾</h1>
+    <div id="main-menu">
+        <button class="btn" id="playButton">Играть</button>
+        <button class="btn" id="recordButton">Рекордный урожай</button>
     </div>
-    <h2>Баланс Игрока 1: <span id="balance1">20</span></h2>
-    <h2>Баланс Игрока 2: <span id="balance2">20</span></h2>
+
+    <div id="gameContainer">
+        <h2>Баланс: <span id="balance">0</span> руб.</h2>
+        <h3 id="yearDisplay">Год: <span id="year">1</span></h3>
+        <button class="btn" id="takeLoan">Взять кредит на 1000 рублей</button>
+        <div id="fieldControls" style="display: none;">
+            <button class="btn" id="rentLand">Арендовать землю (500 рублей / 1000 м²)</button>
+            <div id="areaSelection" style="display: none;">
+                <input type="number" id="landArea" placeholder="Кол-во м²" />
+                <button class="btn" id="confirmRent">Подтвердить аренду</button>
+            </div>
+            <button class="btn" id="openField">Поле</button>
+        </div>
+    </div>
+
+    <div id="fieldContainer">
+        <h2>Ваше поле</h2>
+        <div id="field"></div>
+        <div class="field-info">Арендовано: <span id="rentedArea">0</span> м²</div>
+        <div class="field-info">
+            <button class="btn" id="plantSeeds">Купить семена (25 руб./кг)</button>
+            <input type="number" id="seedsAmount" placeholder="Количество (кг)" />
+            <button class="btn" id="harvest">Собрать урожай</button>
+            <button class="btn" id="plowField">Вспахать поле (250 руб.)</button>
+            <button class="btn" id="sellHarvest">Продажа пшеницы</button>
+        </div>
+        <div id="timer"></div>
+    </div>
 
     <script>
-        const gridSize = 7;
-        let grid = [];
-        let turn = 0;
-        let balances = [20, 20];
-        let peasants = [0, 0];
-        let farms = [0, 0];
-        let cellsOccupied = Array.from({ length: gridSize }, () => Array(gridSize).fill(null));
-        let hasClaimedThisTurn = false; // Переменная для отслеживания захвата клетки за ход
+        let balance = 0;
+        let loan = 0;
+        let rentedArea = 0;
+        let plantedArea = 0;
+        let harvestReady = false;
+        let cropYield = 0; // урожай в кг
+        let harvestAmount = 0; // сколько собрано
+        let highestYield = 0;
+        let year = 1;
 
-        function createGrid() {
-            const gridElement = document.getElementById('grid');
-            gridElement.innerHTML = '';
-            for (let i = 0; i < gridSize; i++) {
-                grid[i] = [];
-                for (let j = 0; j < gridSize; j++) {
-                    const cell = document.createElement('div');
-                    cell.classList.add('cell');
-                    cell.onclick = () => handleCellClick(i, j);
-                    gridElement.appendChild(cell);
-                    grid[i][j] = cell;
+        document.getElementById('playButton').addEventListener('click', () => {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+        });
+
+        document.getElementById('recordButton').addEventListener('click', () => {
+            alert(`Самый высокий урожай: ${highestYield} кг`);
+        });
+
+        document.getElementById('takeLoan').addEventListener('click', () => {
+            balance += 1000;
+            loan = 1000;
+            alert("Вы взяли кредит на 1000 рублей под 30% годовых.");
+            updateBalance();
+            showRentControls();
+        });
+
+        function showRentControls() {
+            document.getElementById('fieldControls').style.display = 'block';
+        }
+
+        document.getElementById('rentLand').addEventListener('click', () => {
+            document.getElementById('areaSelection').style.display = 'block';
+        });
+
+        document.getElementById('confirmRent').addEventListener('click', () => {
+            const area = parseInt(document.getElementById('landArea').value) || 0;
+            if (balance >= 500 * (area / 1000)) {
+                balance -= 500 * (area / 1000);
+                rentedArea += area;
+                alert(`Арендовано ${area} м² поля.`);
+                document.getElementById('rentedArea').innerText = rentedArea;
+                updateBalance();
+                drawField();
+            } else {
+                alert("Недостаточно средств для аренды этой площади.");
+            }
+        });
+
+        document.getElementById('openField').addEventListener('click', () => {
+            document.getElementById('fieldContainer').style.display = 'block';
+        });
+
+        document.getElementById('plantSeeds').addEventListener('click', () => {
+            const seedsCost = 25; // цена за кг
+            const seedsToPlant = parseInt(document.getElementById('seedsAmount').value) || 0;
+            const areaToPlant = seedsToPlant * 250; // 1 кг семян на 250 м²
+
+            // Проверка условий для засева
+            if (seedsToPlant > 0 && balance >= seedsCost * seedsToPlant && plantedArea + areaToPlant <= rentedArea) {
+                balance -= seedsCost * seedsToPlant;
+                updateBalance();
+                alert(`Вы посеяли пшеницу на ${areaToPlant} м².`);
+
+                // Отображаем засеянные квадраты
+                for (let i = plantedArea; i < plantedArea + areaToPlant; i++) {
+                    const square = document.querySelectorAll('.square')[i];
+                    square.classList.add('planted');
+                    const cropEmoji = document.createElement('div');
+                    cropEmoji.className = 'crop';
+                    cropEmoji.innerText = '🌾'; // Эмодзи для пшеницы
+                    square.appendChild(cropEmoji);
                 }
-            }
-        }
 
-        function startGame() {
-            createGrid();
-            for (let i = 0; i < gridSize; i++) {
-                for (let j = 0; j < gridSize; j++) {
-                    cellsOccupied[i][j] = null;
-                    grid[i][j].innerHTML = '';
-                    grid[i][j].style.backgroundColor = '#ccc';
-                }
-            }
-            placeRandomCells();
-            updateBalances();
-            hasClaimedThisTurn = false; // Сбрасываем флаг при старте игры
-        }
+                plantedArea += areaToPlant;
 
-        function placeRandomCells() {
-            const colors = ['🟩', '🟨']; // Зеленый и желтый
-            for (let i = 0; i < 2; i++) {
-                let x, y;
-                do {
-                    x = Math.floor(Math.random() * gridSize);
-                    y = Math.floor(Math.random() * gridSize);
-                } while (cellsOccupied[x][y] !== null);
-                grid[x][y].innerHTML = colors[i];
-                cellsOccupied[x][y] = colors[i];
-            }
-        }
-
-        function nextTurn() {
-            turn = (turn + 1) % 2;
-            hasClaimedThisTurn = false; // Сбрасываем переменную для нового хода
-            updateBalances();
-        }
-
-        function handleCellClick(i, j) {
-            const currentColor = turn === 0 ? '🟩' : '🟨'; // Цвет текущего игрока
-
-            // Проверяем, может ли игрок захватить клетку
-            if (!hasClaimedThisTurn && cellsOccupied[i][j] === null && canClaimCell(i, j, currentColor)) {
-                cellsOccupied[i][j] = currentColor;
-                grid[i][j].innerHTML = currentColor;
-                hasClaimedThisTurn = true; // Игрок захватил клетку в этом ходе
-                updateBalances();
-            }
-        }
-
-        function canClaimCell(i, j, color) {
-            const directions = [
-                [0, 1], [1, 0], [0, -1], [-1, 0]
-            ];
-            for (let [dx, dy] of directions) {
-                const ni = i + dx;
-                const nj = j + dy;
-                if (ni >= 0 && ni < gridSize && nj >= 0 && nj < gridSize && cellsOccupied[ni][nj] === color) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        function updateBalances() {
-            const balance1 = document.getElementById('balance1');
-            const balance2 = document.getElementById('balance2');
-            balance1.textContent = balances[0];
-            balance2.textContent = balances[1];
-
-            for (let i = 0; i < gridSize; i++) {
-                for (let j = 0; j < gridSize; j++) {
-                    if (cellsOccupied[i][j] === '🟩') {
-                        balances[0] += 1; // +1 к балансу Игрока 1 за захваченную клетку
-                    } else if (cellsOccupied[i][j] === '🟨') {
-                        balances[1] += 1; // +1 к балансу Игрока 2 за захваченную клетку
+                // Устанавливаем таймер на созревание
+                let timeLeft = 30; // Время до созревания
+                document.getElementById("timer").innerText = `Урожай созреет через ${timeLeft} секунд.`;
+                const timerInterval = setInterval(() => {
+                    timeLeft--;
+                    document.getElementById("timer").innerText = `Урожай созреет через ${timeLeft} секунд.`;
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        markFieldAsReady(); // Меняем цвет поля на оранжевый
                     }
+                }, 1000);
+
+                // Меняем цвет на оранжевый через 30 секунд
+                setTimeout(() => {
+                    markFieldAsReady();
+                }, 30000); // Через 30 секунд урожай готов
+            } else {
+                alert("Недостаточно средств или земли для посадки.");
+            }
+        });
+
+        function markFieldAsReady() {
+            document.querySelectorAll('.square').forEach(square => {
+                if (square.classList.contains('planted')) {
+                    square.style.backgroundColor = "#ffa500"; // Оранжевый цвет для созревшей пшеницы
                 }
-            }
+            });
+
+            // Рассчитываем урожай
+            const baseYield = Math.floor(plantedArea / 100); // кг за 100 м²
+            cropYield = (document.querySelector('.tilled') ? baseYield * 5 : baseYield * 3); // Если вспахано, то на 50% больше
+            harvestReady = true;
+            alert("Пшеница готова к сбору!");
         }
 
-        function buyPeasant() {
-            if (balances[turn] >= 10) {
-                balances[turn] -= 10;
-                peasants[turn]++;
-                alert("Крестьянин куплен!");
-                updateBalances();
+        document.getElementById('harvest').addEventListener('click', () => {
+            if (harvestReady) {
+                harvestAmount = Math.floor(cropYield); // Учитываем только целое число
+                balance += harvestAmount * (Math.floor(Math.random() * (14 - 10 + 1)) + 10); // Цена от 10 до 14 рублей
+                highestYield = Math.max(highestYield, harvestAmount); // обновление рекорда
+                alert(`Вы собрали ${harvestAmount} кг пшеницы!`);
+                updateBalance();
+                resetField();
             } else {
-                alert("Недостаточно монет для покупки крестьянина.");
+                alert("Урожай еще не готов.");
             }
-        }
+        });
 
-        function buyFortress() {
-            if (balances[turn] >= 15) {
-                balances[turn] -= 15;
-                alert("Крепость куплена!");
-                updateBalances();
+        document.getElementById('sellHarvest').addEventListener('click', () => {
+            if (harvestAmount > 0) {
+                balance += harvestAmount * (Math.floor(Math.random() * (14 - 10 + 1)) + 10);
+                highestYield = Math.max(highestYield, harvestAmount); // обновление рекорда
+                alert(`Вы продали ${harvestAmount} кг пшеницы!`);
+                updateBalance();
+                resetField();
             } else {
-                alert("Недостаточно монет для покупки крепости.");
+                alert("Сначала соберите урожай.");
             }
-        }
+        });
 
-        function buyWarrior() {
-            if (balances[turn] >= 20) {
-                balances[turn] -= 20;
-                alert("Воин куплен!");
-                updateBalances();
+        document.getElementById('plowField').addEventListener('click', () => {
+            if (balance >= 250) { // Обновленная стоимость вспашивания
+                balance -= 250;
+                updateBalance();
+                alert("Поле вспахано, шансы на урожай увеличены!");
             } else {
-                alert("Недостаточно монет для покупки воина.");
+                alert("Недостаточно средств для вспашки.");
+            }
+        });
+
+        function resetField() {
+            plantedArea = 0;
+            harvestReady = false;
+            cropYield = 0; // Сброс урожая
+            document.querySelectorAll('.square').forEach(square => {
+                square.classList.remove('planted');
+                const cropEmoji = square.querySelector('.crop');
+                if (cropEmoji) {
+                    cropEmoji.remove(); // Удаляем эмодзи пшеницы
+                }
+                square.style.backgroundColor = "#d1b353"; // Вернуть цвет земли
+            });
+            document.getElementById("timer").innerText = ""; // Сброс таймера
+        }
+
+        function drawField() {
+            const field = document.getElementById('field');
+            field.innerHTML = ''; // Очищаем поле перед рисованием
+            
+            for (let i = 0; i < (rentedArea / 10); i++) { // 10 м² = 1 квадрат
+                const square = document.createElement('div');
+                square.className = 'square';
+                field.appendChild(square);
             }
         }
 
-        function buyFarm() {
-            if (balances[turn] >= 20) {
-                balances[turn] -= 20;
-                alert("Ферма куплена!");
-                updateBalances();
-            } else {
-                alert("Недостаточно монет для покупки фермы.");
-            }
+        function updateBalance() {
+            document.getElementById('balance').innerText = balance;
+            document.getElementById('year').innerText = year;
         }
 
-        startGame();
+        function updateFieldInfo(plantedCount) {
+            alert(`${plantedCount} квадратов засеяно.`); // Сообщаем сколько квадратов засеяно
+        }
     </script>
 </body>
+
 </html>
