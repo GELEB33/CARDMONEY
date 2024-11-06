@@ -15,6 +15,7 @@
             color: #333;
             margin: 0;
             padding: 20px;
+            background-image: url('https://www.transparenttextures.com/patterns/white-paper.png');
         }
 
         h1 {
@@ -36,6 +37,7 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
 
         .btn:hover {
@@ -57,26 +59,27 @@
 
         #field {
             display: grid;
-            grid-template-columns: repeat(10, 30px); /* 10 колонок */
-            gap: 2px; /* Промежуток между квадратами */
+            grid-template-columns: repeat(20, 30px);
+            gap: 2px;
         }
 
         .square {
             width: 30px;
             height: 30px;
             border: 1px solid #8b5a2b;
-            display: inline-block;
-            background-color: #d1b353; /* Коричневая земля */
             position: relative;
         }
 
         .planted {
-            background-color: #c4d600; /* Цвет для посаженной пшеницы */
-            position: relative;
+            background-color: #c4d600;
+        }
+
+        .notPlanted {
+            background-color: #9b6a4f;
         }
 
         .tilled {
-            background-color: #8b4513; /* Темно-коричневая для вспаханной земли */
+            background-color: #5c3f2b;
         }
 
         .crop {
@@ -85,25 +88,38 @@
             left: 0;
             width: 100%;
             height: 100%;
-            font-size: 20px; /* Размер эмодзи пшеницы */
-            line-height: 30px; /* Центрирование эмодзи в квадрате */
+            font-size: 20px;
+            line-height: 30px;
             text-align: center;
         }
 
-        .field-info {
-            margin-top: 10px;
-        }
-
         #timer {
-            font-size: 1.2rem;
-            color: #ff4500; /* Цвет для таймера */
-            margin-top: 10px;
-        }
-
-        #yearDisplay {
+            font-size: 1.5rem;
+            color: #ff4500;
             margin: 10px 0;
         }
 
+        #yearDisplay,
+        #priceDisplay,
+        #loanDisplay {
+            margin: 10px 0;
+        }
+
+        .event-message {
+            margin: 10px;
+            font-size: 1.2rem;
+            color: #d9534f;
+        }
+
+        #gameOverContainer {
+            display: none;
+            border: 2px solid #d9534f;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 
@@ -115,9 +131,11 @@
     </div>
 
     <div id="gameContainer">
-        <h2>Баланс: <span id="balance">0</span> руб.</h2>
+        <h2>Баланс: <span id="balance">0</span> руб. | Пшеница: <span id="wheatAmount">0</span> кг</h2>
         <h3 id="yearDisplay">Год: <span id="year">1</span></h3>
-        <button class="btn" id="takeLoan">Взять кредит на 1000 рублей</button>
+        <h3 id="loanDisplay">Кредит: <span id="loanAmount">0</span> руб.</h3>
+        <button class="btn" id="takeLoan">Взять кредит</button>
+        <button class="btn" id="payLoan">Выплатить кредит</button>
         <div id="fieldControls" style="display: none;">
             <button class="btn" id="rentLand">Арендовать землю (500 рублей / 1000 м²)</button>
             <div id="areaSelection" style="display: none;">
@@ -126,20 +144,31 @@
             </div>
             <button class="btn" id="openField">Поле</button>
         </div>
+        <button class="btn" id="passYear">Прожить год</button>
     </div>
 
     <div id="fieldContainer">
+        <button class="btn" id="closeField">Закрыть поле</button>
         <h2>Ваше поле</h2>
+        <div id="timer"></div>
         <div id="field"></div>
-        <div class="field-info">Арендовано: <span id="rentedArea">0</span> м²</div>
+        <div class="field-info">Арендовано: <span id="rentedArea">0</span> га</div>
+        <div class="field-info">Посеяно: <span id="plantedAreaDisplay">0</span> га</div>
+        <div class="field-info" id="priceDisplay">Цена пшеницы: <span id="currentPrice">0</span> руб./кг</div>
         <div class="field-info">
             <button class="btn" id="plantSeeds">Купить семена (25 руб./кг)</button>
             <input type="number" id="seedsAmount" placeholder="Количество (кг)" />
             <button class="btn" id="harvest">Собрать урожай</button>
-            <button class="btn" id="plowField">Вспахать поле (250 руб.)</button>
+            <button class="btn" id="plowField">Вспахать поле</button>
             <button class="btn" id="sellHarvest">Продажа пшеницы</button>
         </div>
-        <div id="timer"></div>
+        <div class="event-message" id="eventMessage"></div>
+    </div>
+
+    <div id="gameOverContainer">
+        <h2>Игра окончена!</h2>
+        <p>Ваш баланс равен нулю.</p>
+        <button class="btn" id="restartButton">Начать заново</button>
     </div>
 
     <script>
@@ -149,13 +178,57 @@
         let plantedArea = 0;
         let harvestReady = false;
         let cropYield = 0; // урожай в кг
-        let harvestAmount = 0; // сколько собрано
-        let highestYield = 0;
-        let year = 1;
+        let wheatAmount = 0; // Количество пшеницы в кг
+        let currentPrice = getRandomPrice(); // Начальная цена за килограмм пшеницы
+        let plantingYear = null; // Год, в который была посеяна пшеница
+        let year = 1; // Текущий год
+        const MAX_LOAN = 10000; // Максимальная сумма кредита
+        let highestYield = 0; // Хранение рекорда урожая
+
+        // Загружаем сохраненные данные из localStorage
+        function loadGame() {
+            if (localStorage.getItem('farmGameData')) {
+                const savedData = JSON.parse(localStorage.getItem('farmGameData'));
+                balance = savedData.balance;
+                loan = savedData.loan;
+                rentedArea = savedData.rentedArea;
+                plantedArea = savedData.plantedArea;
+                wheatAmount = savedData.wheatAmount;
+                year = savedData.year;
+            }
+        }
+
+        // Сохраняем данные в localStorage
+        function saveGame() {
+            const gameData = {
+                balance: balance,
+                loan: loan,
+                rentedArea: rentedArea,
+                plantedArea: plantedArea,
+                wheatAmount: wheatAmount,
+                year: year
+            };
+            localStorage.setItem('farmGameData', JSON.stringify(gameData));
+        }
+
+        function gameOver() {
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('fieldContainer').style.display = 'none';
+            document.getElementById('gameOverContainer').style.display = 'block';
+        }
+
+        document.getElementById('restartButton').addEventListener('click', () => {
+            localStorage.removeItem('farmGameData'); // Очистка сохраненных данных
+            resetGame(); // Сброс игры
+            document.getElementById('gameOverContainer').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'block'; // Показать главное меню
+        });
 
         document.getElementById('playButton').addEventListener('click', () => {
+            loadGame(); // Загружаем данные при запуске игры
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('gameContainer').style.display = 'block';
+            resetGame();
         });
 
         document.getElementById('recordButton').addEventListener('click', () => {
@@ -163,11 +236,31 @@
         });
 
         document.getElementById('takeLoan').addEventListener('click', () => {
-            balance += 1000;
-            loan = 1000;
-            alert("Вы взяли кредит на 1000 рублей под 30% годовых.");
-            updateBalance();
-            showRentControls();
+            let loanAmount = parseInt(prompt("Введите сумму кредита (максимум 10,000):", "1000")) || 1000;
+            if (loan === 0 && loanAmount <= MAX_LOAN) {
+                loan = loanAmount;
+                balance += loan;
+                updateLoanDisplay();
+                alert(`Вы взяли кредит на ${loan} рублей под 44% годовых.`);
+                updateBalance();
+                showRentControls();
+            } else if (loan > 0) {
+                alert("У вас уже есть активный кредит.");
+            } else {
+                alert(`Максимальная сумма кредита составляет ${MAX_LOAN} рублей.`);
+            }
+        });
+
+        document.getElementById('payLoan').addEventListener('click', () => {
+            if (balance >= loan) {
+                balance -= loan;
+                loan = 0;
+                updateLoanDisplay();
+                alert("Вы выплатили кредит!");
+                updateBalance();
+            } else {
+                alert("Недостаточно средств для выплаты кредита.");
+            }
         });
 
         function showRentControls() {
@@ -182,9 +275,9 @@
             const area = parseInt(document.getElementById('landArea').value) || 0;
             if (balance >= 500 * (area / 1000)) {
                 balance -= 500 * (area / 1000);
-                rentedArea += area;
-                alert(`Арендовано ${area} м² поля.`);
-                document.getElementById('rentedArea').innerText = rentedArea;
+                rentedArea += area / 10000; // переводим в гектары
+                alert(`Арендовано ${area / 10000} га поля.`);
+                document.getElementById('rentedArea').innerText = (rentedArea).toFixed(2); // отображаем гектары
                 updateBalance();
                 drawField();
             } else {
@@ -196,45 +289,87 @@
             document.getElementById('fieldContainer').style.display = 'block';
         });
 
+        document.getElementById('passYear').addEventListener('click', () => {
+            // Списание процентов по кредиту
+            if (loan > 0) {
+                const interest = loan * 0.44;
+                balance -= interest;
+                loan += interest;
+                alert(`Списано ${interest.toFixed(2)} руб. за проценты по кредиту.`);
+            }
+
+            year++;
+            document.getElementById('year').innerText = year;
+
+            updatePrice(); // Обновляем цену на пшеницу
+
+            plantingYear = null;
+            alert(`Наступил год: ${year}.`);
+            randomEvent();
+            saveGame(); // Сохраняем данные после изменения года
+
+            // Проверяем, не упал ли баланс до нуля
+            if (balance <= 0) {
+                gameOver();
+            }
+        });
+
+        document.getElementById('closeField').addEventListener('click', () => {
+            document.getElementById('fieldContainer').style.display = 'none';
+            saveGame(); // Сохраняем данные при закрытии поля
+        });
+
+        function updatePrice() {
+            currentPrice = getRandomPrice(); // Генерация цены от 5 до 14 рублей
+            document.getElementById('currentPrice').innerText = formatLargeNumber(currentPrice);
+        }
+
+        function getRandomPrice() {
+            return Math.floor(Math.random() * (14 - 5 + 1)) + 5; // Устанавливаем цену от 5 до 14
+        }
+
         document.getElementById('plantSeeds').addEventListener('click', () => {
-            const seedsCost = 25; // цена за кг
+            if (plantingYear === year) {
+                alert("Вы уже посеяли в этом году. Проживите год для нового посева.");
+                return;
+            }
+
+            const seedsCost = 25; 
             const seedsToPlant = parseInt(document.getElementById('seedsAmount').value) || 0;
-            const areaToPlant = seedsToPlant * 250; // 1 кг семян на 250 м²
+            const areaToPlant = seedsToPlant * 250; // В м²
 
-            // Проверка условий для засева
-            if (seedsToPlant > 0 && balance >= seedsCost * seedsToPlant && plantedArea + areaToPlant <= rentedArea) {
+            // Проверка на наличие средств и площади
+            if (seedsToPlant > 0 && balance >= seedsCost * seedsToPlant && plantedArea + areaToPlant / 10000 <= rentedArea) { 
                 balance -= seedsCost * seedsToPlant;
+                plantingYear = year; 
                 updateBalance();
-                alert(`Вы посеяли пшеницу на ${areaToPlant} м².`);
 
-                // Отображаем засеянные квадраты
-                for (let i = plantedArea; i < plantedArea + areaToPlant; i++) {
+                const areaPlanted = areaToPlant / 10000; // переводим в гектары
+                plantedArea += areaPlanted; // Увеличиваем посеянную площадь.
+
+                alert(`Вы посеяли пшеницу на ${areaToPlant} м² (${areaPlanted} га).`);
+                
+                for (let i = 0; i < Math.floor(areaPlanted * 100); i++) {
                     const square = document.querySelectorAll('.square')[i];
-                    square.classList.add('planted');
-                    const cropEmoji = document.createElement('div');
-                    cropEmoji.className = 'crop';
-                    cropEmoji.innerText = '🌾'; // Эмодзи для пшеницы
-                    square.appendChild(cropEmoji);
+                    if (square) {
+                        square.classList.add('planted');
+                        const cropEmoji = document.createElement('div');
+                        cropEmoji.className = 'crop';
+                        cropEmoji.innerText = '🌾'; 
+                        square.appendChild(cropEmoji);
+                    }
                 }
 
-                plantedArea += areaToPlant;
-
-                // Устанавливаем таймер на созревание
-                let timeLeft = 30; // Время до созревания
+                let timeLeft = 30; 
                 document.getElementById("timer").innerText = `Урожай созреет через ${timeLeft} секунд.`;
                 const timerInterval = setInterval(() => {
                     timeLeft--;
                     document.getElementById("timer").innerText = `Урожай созреет через ${timeLeft} секунд.`;
                     if (timeLeft <= 0) {
                         clearInterval(timerInterval);
-                        markFieldAsReady(); // Меняем цвет поля на оранжевый
+                        markFieldAsReady();
                     }
                 }, 1000);
-
-                // Меняем цвет на оранжевый через 30 секунд
-                setTimeout(() => {
-                    markFieldAsReady();
-                }, 30000); // Через 30 секунд урожай готов
             } else {
                 alert("Недостаточно средств или земли для посадки.");
             }
@@ -243,22 +378,29 @@
         function markFieldAsReady() {
             document.querySelectorAll('.square').forEach(square => {
                 if (square.classList.contains('planted')) {
-                    square.style.backgroundColor = "#ffa500"; // Оранжевый цвет для созревшей пшеницы
+                    square.style.backgroundColor = "#ffa500"; 
                 }
             });
 
-            // Рассчитываем урожай
-            const baseYield = Math.floor(plantedArea / 100); // кг за 100 м²
-            cropYield = (document.querySelector('.tilled') ? baseYield * 5 : baseYield * 3); // Если вспахано, то на 50% больше
+            let totalHarvest = 0;
+            document.querySelectorAll('.square').forEach(square => {
+                if (square.classList.contains('planted')) {
+                    const randomMultiplier = (Math.random() * (1.8 - 1.3) + 1.3); 
+                    totalHarvest += 1 * randomMultiplier; 
+                }
+            });
+
+            cropYield = totalHarvest; 
             harvestReady = true;
             alert("Пшеница готова к сбору!");
         }
 
         document.getElementById('harvest').addEventListener('click', () => {
             if (harvestReady) {
-                harvestAmount = Math.floor(cropYield); // Учитываем только целое число
-                balance += harvestAmount * (Math.floor(Math.random() * (14 - 10 + 1)) + 10); // Цена от 10 до 14 рублей
-                highestYield = Math.max(highestYield, harvestAmount); // обновление рекорда
+                const harvestAmount = Math.floor(cropYield); 
+                wheatAmount += harvestAmount; 
+                balance += harvestAmount * currentPrice; 
+                highestYield = Math.max(highestYield, harvestAmount); 
                 alert(`Вы собрали ${harvestAmount} кг пшеницы!`);
                 updateBalance();
                 resetField();
@@ -268,61 +410,148 @@
         });
 
         document.getElementById('sellHarvest').addEventListener('click', () => {
-            if (harvestAmount > 0) {
-                balance += harvestAmount * (Math.floor(Math.random() * (14 - 10 + 1)) + 10);
-                highestYield = Math.max(highestYield, harvestAmount); // обновление рекорда
-                alert(`Вы продали ${harvestAmount} кг пшеницы!`);
-                updateBalance();
-                resetField();
+            if (wheatAmount > 0) {
+                let sellingAmount = prompt(`Сколько кг хотите продать? (Доступно: ${wheatAmount} кг)`);
+                sellingAmount = parseInt(sellingAmount) || 0;
+
+                if (sellingAmount > 0 && sellingAmount <= wheatAmount) {
+                    balance += sellingAmount * currentPrice;
+                    wheatAmount -= sellingAmount; 
+                    alert(`Вы продали ${sellingAmount} кг пшеницы!`);
+                    updateBalance();
+                } else {
+                    alert("Недостаточно пшеницы для продажи.");
+                }
             } else {
                 alert("Сначала соберите урожай.");
             }
         });
 
         document.getElementById('plowField').addEventListener('click', () => {
-            if (balance >= 250) { // Обновленная стоимость вспашивания
-                balance -= 250;
+            const plowCost = 250 + Math.floor(rentedArea / 1000) * 250; 
+            if (balance >= plowCost) {
+                balance -= plowCost;
                 updateBalance();
                 alert("Поле вспахано, шансы на урожай увеличены!");
+                document.querySelectorAll('.square').forEach(square => {
+                    square.classList.add('tilled');
+                });
             } else {
                 alert("Недостаточно средств для вспашки.");
             }
         });
 
         function resetField() {
-            plantedArea = 0;
-            harvestReady = false;
-            cropYield = 0; // Сброс урожая
+            plantedArea = 0; // сброс посеянной земли
+            harvestReady = false; // сброс статуса урожая
+                        cropYield = 0; // сброс урожая
             document.querySelectorAll('.square').forEach(square => {
                 square.classList.remove('planted');
                 const cropEmoji = square.querySelector('.crop');
                 if (cropEmoji) {
-                    cropEmoji.remove(); // Удаляем эмодзи пшеницы
+                    cropEmoji.remove();
                 }
-                square.style.backgroundColor = "#d1b353"; // Вернуть цвет земли
+                square.className = "square notPlanted"; 
             });
-            document.getElementById("timer").innerText = ""; // Сброс таймера
+            document.getElementById("timer").innerText = ""; 
         }
 
         function drawField() {
             const field = document.getElementById('field');
-            field.innerHTML = ''; // Очищаем поле перед рисованием
-            
-            for (let i = 0; i < (rentedArea / 10); i++) { // 10 м² = 1 квадрат
+            field.innerHTML = ''; 
+            plantedArea = 0; 
+
+            for (let i = 0; i < (rentedArea * 100); i++) { 
                 const square = document.createElement('div');
-                square.className = 'square';
+                square.className = 'square notPlanted'; 
                 field.appendChild(square);
             }
         }
 
         function updateBalance() {
-            document.getElementById('balance').innerText = balance;
-            document.getElementById('year').innerText = year;
+            document.getElementById('balance').innerText = formatLargeNumber(balance);
+            document.getElementById('wheatAmount').innerText = wheatAmount;
+            document.getElementById('loanAmount').innerText = formatLargeNumber(loan);
+            document.getElementById('plantedAreaDisplay').innerText = formatLargeNumber(plantedArea * 10000); // показываем в м²
+
+            // Проверяем на нулевой баланс
+            if (balance <= 0) {
+                gameOver(); // Завершаем игру, если баланс ноль или меньше
+            }
         }
 
-        function updateFieldInfo(plantedCount) {
-            alert(`${plantedCount} квадратов засеяно.`); // Сообщаем сколько квадратов засеяно
+        function updateLoanDisplay() {
+            document.getElementById('loanAmount').innerText = formatLargeNumber(loan);
         }
+
+        function formatLargeNumber(num) {
+            if (num >= 1e9) {
+                return (num / 1e9).toFixed(1) + ' млрд';
+            } else if (num >= 1e6) {
+                return (num / 1e6).toFixed(1) + ' млн';
+            } else if (num >= 1e3) {
+                return (num / 1e3).toFixed(1) + ' тыс';
+            }
+            return num;
+        }
+
+        // Функция, которая вызывается при случайном событии
+        function randomEvent() {
+            const event = Math.random();
+            if (event < 0.2) { // 20% шанс на плохое событие
+                const loss = Math.floor(Math.random() * 1500 + 100);
+                balance -= loss; // Списание средств
+                alert(`Неожиданное событие! Вы потеряли ${loss} рублей из-за природного бедствия.`);
+                updateBalance(); // Обновление баланса после потерь
+                document.getElementById('eventMessage').innerText = `Вы потеряли ${loss} рублей.`;
+            } else if (event < 0.4) { // 20% шанс на хорошее событие
+                const gain = Math.floor(Math.random() * 1500 + 100);
+                balance += gain; // Увеличение баланса
+                alert(`Удачное событие! Вы заработали ${gain} рублей на продаже излишков урожая.`);
+                updateBalance(); // Обновление баланса после прибыли
+                document.getElementById('eventMessage').innerText = `Вы заработали ${gain} рублей.`;
+            } else if (event < 0.6) { // 20% шанс на особое событие
+                const bonus = Math.floor(Math.random() * 200 + 50);
+                wheatAmount += bonus; // Добавляем к предыдущему количеству пшеницы
+                alert(`Вы получили бонус: ${bonus} кг пшеницы!`);
+                document.getElementById('eventMessage').innerText = `Вы получили бонус: ${bonus} кг пшеницы.`;
+            } else {
+                // Не происходит события
+                document.getElementById('eventMessage').innerText = ''; // Очищаем сообщение о событии
+            }
+        }
+
+        // Функция сброса начальных параметров игры
+        function resetGame() {
+            balance = 0;
+            loan = 0;
+            rentedArea = 0;
+            plantedArea = 0;
+            harvestReady = false;
+            cropYield = 0;
+            wheatAmount = 0;
+            currentPrice = getRandomPrice(); // Установление начальной цены
+            plantingYear = null; // Обнуление года посева
+            year = 1; // Сброс года
+            highestYield = 0; // Сброс рекорда урожая
+
+            document.getElementById('balance').innerText = formatLargeNumber(balance);
+            document.getElementById('wheatAmount').innerText = wheatAmount;
+            document.getElementById('loanAmount').innerText = formatLargeNumber(loan);
+            document.getElementById('plantedAreaDisplay').innerText = formatLargeNumber(plantedArea * 10000); // Отображаем в м²
+            document.getElementById('year').innerText = year;
+
+            document.getElementById('rentedArea').innerText = '0';
+            drawField();
+            updateBalance();
+            updateLoanDisplay();
+            document.getElementById('eventMessage').innerText = ''; // Очищаем сообщение о событии
+        }
+
+        // Инициализация игрового поля
+        drawField();
+        updateBalance();
+        updateLoanDisplay();
     </script>
 </body>
 
