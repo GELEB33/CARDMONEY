@@ -45,7 +45,8 @@
         }
 
         #gameContainer,
-        #fieldContainer {
+        #fieldContainer,
+        #gameOverContainer {
             display: none;
             border: 2px solid #8b5a2b;
             border-radius: 10px;
@@ -112,7 +113,7 @@
         }
 
         #gameOverContainer {
-            display: none;
+            display: none; /* Скрыто по умолчанию */
             border: 2px solid #d9534f;
             background-color: #fff;
             padding: 20px;
@@ -167,7 +168,7 @@
 
     <div id="gameOverContainer">
         <h2>Игра окончена!</h2>
-        <p>Ваш баланс равен нулю.</p>
+        <p>Ваш баланс меньше нуля.</p>
         <button class="btn" id="restartButton">Начать заново</button>
     </div>
 
@@ -309,7 +310,7 @@
             saveGame(); // Сохраняем данные после изменения года
 
             // Проверяем, не упал ли баланс до нуля
-            if (balance <= 0) {
+            if (balance < 0) {
                 gameOver();
             }
         });
@@ -444,7 +445,7 @@
         function resetField() {
             plantedArea = 0; // сброс посеянной земли
             harvestReady = false; // сброс статуса урожая
-                        cropYield = 0; // сброс урожая
+            cropYield = 0; // сброс урожая
             document.querySelectorAll('.square').forEach(square => {
                 square.classList.remove('planted');
                 const cropEmoji = square.querySelector('.crop');
@@ -453,14 +454,12 @@
                 }
                 square.className = "square notPlanted"; 
             });
-            document.getElementById("timer").innerText = ""; 
+                        document.getElementById("timer").innerText = ""; 
         }
 
         function drawField() {
             const field = document.getElementById('field');
             field.innerHTML = ''; 
-            plantedArea = 0; 
-
             for (let i = 0; i < (rentedArea * 100); i++) { 
                 const square = document.createElement('div');
                 square.className = 'square notPlanted'; 
@@ -473,10 +472,9 @@
             document.getElementById('wheatAmount').innerText = wheatAmount;
             document.getElementById('loanAmount').innerText = formatLargeNumber(loan);
             document.getElementById('plantedAreaDisplay').innerText = formatLargeNumber(plantedArea * 10000); // показываем в м²
-
-            // Проверяем на нулевой баланс
-            if (balance <= 0) {
-                gameOver(); // Завершаем игру, если баланс ноль или меньше
+            // Проверяем, не стал ли баланс меньше 0
+            if (balance < 0) {
+                gameOver();
             }
         }
 
@@ -556,3 +554,4 @@
 </body>
 
 </html>
+
