@@ -1,300 +1,454 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Soldier Battle</title>
+    <title>Игра Выживание</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
         body {
+            font-family: 'Roboto Mono', monospace;
+            text-align: center;
+            background-image: url('https://avatars.mds.yandex.net/i?id=76631e6d0849594d71797743abdb0419_l-5185593-images-thumbs&n=13'); /* Новый фон игры */
+            background-size: cover; /* Растянуть изображение на всю страницу */
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            padding-top: 60px; /* Сдвигаем на 60px вниз */
+            text-shadow: 2px 2px 5px black; /* Черная обводка текста */
+            font-weight: bold; /* Жирный шрифт */
+        }
+
+        #game {
+            background-color: rgba(61, 61, 61, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            margin: 20px auto;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-            font-family: Arial, sans-serif;
         }
 
-        .game-board {
-            display: grid;
-            gap: 5px;
-            margin-bottom: 20px;
-        }
-
-        .cell {
-            width: 100px;
-            height: 100px;
-            background-color: #fff;
-            border: 2px solid #000;
+        .balance {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2em;
+            justify-content: space-around;
+            margin-bottom: 15px;
+            background-color: #4c4c4c;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .balance-item {
+            font-weight: bold;
+        }
+
+        .button {
+            background-image: url('https://avatars.mds.yandex.net/i?id=5b8cc8379db8add2efb6bb14a3fc5d9e_l-8497639-images-thumbs&n=13');
+            background-size: cover;
+            border: none;
+            color: white;
+            padding: 10px 20px;
             cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: opacity 0.3s, transform 0.1s; /* Добавлено для анимации */
+            text-align: center;
+        }
+
+        .button:hover {
+            opacity: 0.8;
+            transform: scale(1.05); /* Увеличение при наведении */
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #4c4c4c;
+            padding: 10px;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .footer-button {
+            width: 100%;
+            background-image: url('https://avatars.mds.yandex.net/i?id=5b8cc8379db8add2efb6bb14a3fc5d9e_l-8497639-images-thumbs&n=13');
+            background-size: cover;
+            border: none;
+            color: white;
+            padding: 15px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            text-align: center;
+            transition: opacity 0.3s, transform 0.1s; /* Добавлено для анимации */
+        }
+
+        .footer-button:hover {
+            opacity: 0.8;
+            transform: scale(1.05); /* Увеличение при наведении */
+        }
+
+        /* Настройки модального окна карты */
+        #map-modal {
+            display: none; /* Скрыть модальное окно по умолчанию */
+            position: fixed;
+            z-index: 2;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #222222;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 600px;
             position: relative;
         }
 
-        .soldier {
-            font-size: 2em;
-        }
-
-        .soldier-red {
-            color: red;
-        }
-
-        .soldier-blue {
-            color: blue;
-        }
-
-        .soldier-red-strong {
-            color: red;
-            font-size: 2.5em;
-        }
-
-        .soldier-blue-strong {
-            color: blue;
-            font-size: 2.5em;
-        }
-
-        .soldier-red-fast {
-            color: red;
-            font-size: 1.5em;
-        }
-
-        .soldier-blue-fast {
-            color: blue;
-            font-size: 1.5em;
-        }
-
-        .status {
-            font-size: 1.5em;
-            margin-bottom: 20px;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-        }
-
-        .controls button {
-            padding: 10px 20px;
-            font-size: 1em;
+        .close {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
             cursor: pointer;
         }
 
-        .upgrade {
+        .close:hover,
+        .close:focus {
+            color: white;
+            text-decoration: none;
+        }
+
+        #map-area {
+            background-image: url('https://i.yapx.ru/YOfgS.jpg'); /* Новая текстура карты */
+            background-size: cover; /* Настройка обложки */
+            height: 500px; /* Высота карты */
+            width: 100%;
+            position: relative; /* Устанавливаем элемент в относительное положение */
+            cursor: grab;
+            overflow: hidden; /* Скрыть лишнее содержимое */
+        }
+
+        #resource-area {
             display: flex;
-            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
             margin-top: 20px;
         }
 
-        .upgrade button {
-            padding: 10px 20px;
-            font-size: 1em;
+        .resource-item {
+            font-size: 48px;
+            margin: 10px;
             cursor: pointer;
+            transition: transform 0.1s;
         }
 
-        .highlight {
-            border: 2px solid yellow;
+        .resource-item:hover {
+            transform: scale(1.1);
+        }
+
+        #intro {
+            background: rgba(61, 61, 61, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 400px;
+            margin: 20px auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #intro h1 {
+            margin-bottom: 15px;
+        }
+
+        #settlement-name {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            width: 80%;
+            font-size: 16px;
+        }
+
+        .volume-control {
+            margin: 10px;
+        }
+
+        #resource-modal {
+            display: none;
+            position: fixed;
+            z-index: 3;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding-top: 60px;
+        }
+
+        .resource-content {
+            background-color: #222222;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            color: white;
+        }
+
+        #spawn-area {
+            position: relative;
+            width: 100%;
+            height: 300px; /* Задаем высоту для области спавна ресурсов */
         }
     </style>
 </head>
 <body>
-    <div class="controls">
-        <button onclick="setBoardSize(3)">3x3 Board</button>
-        <button onclick="setBoardSize(4)">4x4 Board</button>
-        <button onclick="setBoardSize(5)">5x5 Board</button>
+
+<audio id="background-music" loop>
+    <source src="https://disk.yandex.ru/d/bnlgK68pIfW8Yg" type="audio/mpeg">
+    Ваш браузер не поддерживает аудиотег.
+</audio>
+
+<audio id="button-sound">
+    <source src="https://disk.yandex.ru/d/DvQwNve9JmnYtA" type="audio/mpeg">
+    Ваш браузер не поддерживает аудиотег.
+</audio>
+
+<div id="intro">
+    <h1>Лорд этих земель</h1>
+    <p>Фух, хорошо что ты пришел! У нас упадок, я не знаю, что делать. Собираюсь свалить отсюда, оставляю этот кусок земли тебе. Удачи!</p>
+    <p>Введите название вашего поселения:</p>
+    <input type="text" id="settlement-name" placeholder="Название поселения" />
+    <button class="button" onclick="startGame(); playButtonSound()">Начать игру</button>
+    <div class="volume-control">
+        <label for="volume">Громкость:</label>
+        <input type="range" id="volume" min="0" max="1" step="0.01" value="1" onchange="setVolume(this.value)">
+        <button class="button" onclick="toggleMute()">Убрать звук</button>
     </div>
-    <div class="game-board" id="gameBoard"></div>
-    <div class="status" id="status">Player Red's turn</div>
-    <div class="controls">
-        <button onclick="restartGame()">Restart Game</button>
+</div>
+
+<div id="game" style="display: none;">
+    <h1 id="settlement-title">🏝️ Название поселения</h1>
+    <div class="balance">
+        <div class="balance-item">🌳 Дерево: <span id="wood-count">0</span></div>
+        <div class="balance-item">🪨 Камень: <span id="stone-count">0</span></div>
+        <div class="balance-item">🍖 Еда: <span id="food-count">0</span></div>
+        <div class="balance-item">💡 Энергия: <span id="energy-count">5</span>/5</div>
+        <div class="balance-item">👥 Люди: <span id="people-count">0</span></div>
     </div>
-    <div class="upgrade">
-        <button onclick="upgradeSoldier('strong')">Upgrade to Strong Soldier</button>
-        <button onclick="upgradeSoldier('fast')">Upgrade to Fast Soldier</button>
+
+    <div id="resource-area">
+        <!-- Здесь будут появляться ресурсы -->
     </div>
-    <script>
-        const gameBoard = document.getElementById('gameBoard');
-        const statusDisplay = document.getElementById('status');
-        let currentPlayer = 'red';
-        let gameState = [];
-        let selectedCell = null;
-        let soldierType = 'normal';
-        let boardSize = 3;
-        let winCondition = 3;
+</div>
 
-        function setBoardSize(size) {
-            boardSize = size;
-            if (size === 5) {
-                winCondition = 4;
-            } else {
-                winCondition = 3;
-            }
-            restartGame();
+<div class="footer">
+    <button class="footer-button" onclick="openResourceModal(); playButtonSound()">Добыча ресурсов</button>
+    <button class="footer-button" onclick="openMapModal(); playButtonSound()">Карта</button>
+</div>
+
+<!-- Модальное окно для карты и построек -->
+<div id="map-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeMapModal()">&times;</span>
+        <h3>Карта</h3>
+        <div id="map-area"></div> <!-- Большой квадрат для карты -->
+    </div>
+</div>
+
+<!-- Модальное окно для добычи ресурсов -->
+<div id="resource-modal">
+    <div class="resource-content">
+        <span class="close" onclick="closeResourceModal()">&times;</span>
+        <h3>Ресурсы</h3>
+        <div id="spawn-area"></div>
+    </div>
+</div>
+
+<script>
+    let resources = { wood: 0, stone: 0, food: 0 };
+    let energy = 5;
+    let people = 0;
+    let energyMax = 5;
+    let isDragging = false;
+    let startX;
+    let startY;
+    let scrollLeft;
+    let scrollTop;
+    let isMuted = false; // аудиозвук отключён
+
+    // Установить интервал восстановления энергии
+    setInterval(() => {
+        if (energy < energyMax) {
+            energy++;
+            updateStatus();
         }
+    }, 30000); // Восстанавливаем 1 энергию каждые 30 секунд
 
-        function createBoard() {
-            gameBoard.innerHTML = '';
-            gameBoard.style.gridTemplateColumns = `repeat(${boardSize}, 100px)`;
-            gameBoard.style.gridTemplateRows = `repeat(${boardSize}, 100px)`;
-            gameState = Array(boardSize * boardSize).fill("");
-            for (let i = 0; i < boardSize * boardSize; i++) {
-                const cell = document.createElement('div');
-                cell.classList.add('cell');
-                cell.setAttribute('data-index', i);
-                cell.addEventListener('click', handleCellClick);
-                gameBoard.appendChild(cell);
-            }
+    // Функция для инициализации перетаскивания карты
+    function initMapDragging() {
+        const mapArea = document.getElementById('map-area');
+
+        // Обработчик для мыши
+        mapArea.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.pageX - mapArea.offsetLeft;
+            startY = e.pageY - mapArea.offsetTop;
+            scrollLeft = mapArea.scrollLeft;
+            scrollTop = mapArea.scrollTop;
+            mapArea.style.cursor = 'grabbing';
+        });
+
+        mapArea.addEventListener('mouseup', () => {
+            isDragging = false;
+            mapArea.style.cursor = 'grab';
+        });
+
+        mapArea.addEventListener('mouseleave', () => {
+            isDragging = false;
+            mapArea.style.cursor = 'grab';
+        });
+
+        mapArea.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const x = e.pageX - mapArea.offsetLeft;
+            const y = e.pageY - mapArea.offsetTop;
+            const walkX = (x - startX);
+            const walkY = (y - startY);
+            mapArea.scrollLeft = scrollLeft - walkX;
+            mapArea.scrollTop = scrollTop - walkY;
+        });
+    }
+
+    // Функция для появления ресурсов (дерево и камень)
+    function spawnResource() {
+        const spawnArea = document.getElementById('spawn-area');
+        const resourceItem = document.createElement('div');
+        const resourceType = Math.random() < 0.5 ? '🌳' : '🪨'; // Рандомный выбор
+        resourceItem.className = 'resource-item';
+        resourceItem.innerHTML = resourceType;
+        resourceItem.style.position = 'absolute'; // Устанавливаем абсолютное позиционирование
+        resourceItem.style.left = `${Math.random() * 90}%`; // Случайная позиция по X
+        resourceItem.style.top = `${Math.random() * 90}%`; // Случайная позиция по Y
+        resourceItem.onclick = function() {
+            collectResource(resourceType, resourceItem); // Передаем элемент для удаления
+        };
+        spawnArea.appendChild(resourceItem);
+    }
+
+    // Функция для сбора ресурсов
+    function collectResource(type, element) {
+        if (type === '🌳') {
+            resources.wood++;
+        } else if (type === '🪨') {
+            resources.stone++;
         }
+        element.remove(); // Удаляем эмодзи после сбора
+        updateStatus();
+    }
 
-        function handleCellClick(event) {
-            const clickedCell = event.target;
-            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
-
-            if (gameState[clickedCellIndex] === "" && selectedCell === null) {
-                gameState[clickedCellIndex] = currentPlayer;
-                clickedCell.innerHTML = `<div class="soldier soldier-${currentPlayer}-${soldierType}">${currentPlayer === 'red' ? '🧑‍🦰' : '🧑‍🦱'}</div>`;
-                handleResultValidation();
-            } else if (gameState[clickedCellIndex] === currentPlayer) {
-                selectedCell = clickedCellIndex;
-                highlightCell(clickedCell, true);
-            } else if (selectedCell !== null && gameState[clickedCellIndex] === "") {
-                gameState[selectedCell] = "";
-                cells[selectedCell].innerHTML = "";
-                highlightCell(cells[selectedCell], false);
-
-                gameState[clickedCellIndex] = currentPlayer;
-                clickedCell.innerHTML = `<div class="soldier soldier-${currentPlayer}-${soldierType}">${currentPlayer === 'red' ? '🧑‍🦰' : '🧑‍🦱'}</div>`;
-                selectedCell = null;
-                handleResultValidation();
-            } else if (selectedCell !== null && gameState[clickedCellIndex] !== currentPlayer) {
-                gameState[clickedCellIndex] = currentPlayer;
-                clickedCell.innerHTML = `<div class="soldier soldier-${currentPlayer}-${soldierType}">${currentPlayer === 'red' ? '🧑‍🦰' : '🧑‍🦱'}</div>`;
-                gameState[selectedCell] = "";
-                cells[selectedCell].innerHTML = "";
-                highlightCell(cells[selectedCell], false);
-                selectedCell = null;
-                handleResultValidation();
-            }
+    // Открыть окно для добычи ресурсов
+    function openResourceModal() {
+        if (energy <= 0) {
+            alert("Недостаточно энергии для добычи ресурсов!");
+            return;
         }
-
-        function highlightCell(cell, highlight) {
-            if (highlight) {
-                cell.classList.add('highlight');
-            } else {
-                cell.classList.remove('highlight');
-            }
+        energy--; // Снижаем энергию на 1 за каждое нажатие на кнопку
+        updateStatus();
+        document.getElementById('resource-modal').style.display = "block";
+        document.getElementById('spawn-area').innerHTML = ''; // Очистить старую область спавна
+        for (let i = 0; i < 5; i++) { // Задаем количество предметов для спавна
+            spawnResource();
         }
+    }
 
-        function handleResultValidation() {
-            let roundWon = false;
-            for (let i = 0; i < boardSize * boardSize; i++) {
-                const winCondition = checkWinCondition(i);
-                if (winCondition) {
-                    roundWon = true;
-                    break;
-                }
-            }
+    // Закрыть модальное окно с ресурсами
+    function closeResourceModal() {
+        document.getElementById('resource-modal').style.display = "none";
+    }
 
-            if (roundWon) {
-                statusDisplay.textContent = 'Player ' + (currentPlayer === 'red' ? 'Red' : 'Blue') + ' has won!';
-                isGameActive = false;
-                return;
-            }
+    // Функция для открытия модального окна карты
+    function openMapModal() {
+        document.getElementById('map-modal').style.display = "block";
+        initMapDragging(); // Инициализируем перетаскивание карты
+    }
 
-            const roundDraw = gameState.every(cell => cell !== "");
-            if (roundDraw) {
-                statusDisplay.textContent = 'Game ended in a draw!';
-                isGameActive = false;
-                return;
-            }
+    // Закрыть модальное окно карты
+    function closeMapModal() {
+        document.getElementById('map-modal').style.display = "none";
+    }
 
-            currentPlayer = currentPlayer === "red" ? "blue" : "red";
-            statusDisplay.textContent = 'Player ' + (currentPlayer === 'red' ? 'Red' : 'Blue') + '\'s turn';
+    // Функция начала игры
+    function startGame() {
+        const settlementName = document.getElementById('settlement-name').value;
+        if (settlementName.trim() === "") {
+            alert("Пожалуйста, введите название поселения!");
+            return;
         }
+        document.getElementById('intro').style.display = 'none';
+        document.getElementById('game').style.display = 'block';
+        document.getElementById('settlement-title').textContent = `🏝️ ${settlementName}`;
+        updateStatus(); // Обновить статус при начале игры
+        playBackgroundMusic(); // Начинаем воспроизводить фоновую музыку
+    }
 
-        function checkWinCondition(index) {
-            const row = Math.floor(index / boardSize);
-            const col = index % boardSize;
-            let count = 0;
+    // Функция для обновления элементов статуса
+    function updateStatus() {
+        document.getElementById('wood-count').textContent = resources.wood;
+        document.getElementById('stone-count').textContent = resources.stone;
+        document.getElementById('food-count').textContent = resources.food;
+        document.getElementById('energy-count').textContent = energy;
+        document.getElementById('people-count').textContent = people;
+    }
 
-            // Check row
-            for (let i = 0; i < boardSize; i++) {
-                if (gameState[row * boardSize + i] === currentPlayer) {
-                    count++;
-                    if (count === winCondition) return true;
-                } else {
-                    count = 0;
-                }
-            }
+    // Функция воспроизведения фоновой музыки
+    function playBackgroundMusic() {
+        const audio = document.getElementById('background-music');
+        audio.volume = 1; // Установить максимальную громкость по умолчанию
+        audio.play();
+    }
 
-            count = 0;
-            // Check column
-            for (let i = 0; i < boardSize; i++) {
-                if (gameState[i * boardSize + col] === currentPlayer) {
-                    count++;
-                    if (count === winCondition) return true;
-                } else {
-                    count = 0;
-                }
-            }
+    // Функция воспроизведения звука нажатия кнопок
+    function playButtonSound() {
+        if (isMuted) return; // Если звуки отключены
+        const audio = document.getElementById('button-sound');
+        audio.currentTime = 0; // Сброс времени до начала
+        audio.play();
+    }
 
-            count = 0;
-            // Check diagonal (top-left to bottom-right)
-            let startRow = row - Math.min(row, col);
-            let startCol = col - Math.min(row, col);
-            for (let i = 0; i < boardSize; i++) {
-                if (startRow + i < boardSize && startCol + i < boardSize) {
-                    if (gameState[(startRow + i) * boardSize + (startCol + i)] === currentPlayer) {
-                        count++;
-                        if (count === winCondition) return true;
-                    } else {
-                        count = 0;
-                    }
-                }
-            }
+    // Установка громкости
+    function setVolume(value) {
+        const audio = document.getElementById('background-music');
+        audio.volume = value;
+    }
 
-            count = 0;
-            // Check diagonal (top-right to bottom-left)
-            startRow = row - Math.min(row, boardSize - 1 - col);
-            startCol = col + Math.min(row, boardSize - 1 - col);
-            for (let i = 0; i < boardSize; i++) {
-                if (startRow + i < boardSize && startCol - i >= 0) {
-                    if (gameState[(startRow + i) * boardSize + (startCol - i)] === currentPlayer) {
-                        count++;
-                        if (count === winCondition) return true;
-                    } else {
-                        count = 0;
-                    }
-                }
-            }
+    // Переключение звука
+    function toggleMute() {
+        const audio = document.getElementById('background-music');
+        isMuted = !isMuted; // Переключаем состояние
+        audio.muted = isMuted; // Устанавливаем состояние звука
+        alert(isMuted ? "Звук отключен" : "Звук включен");
+    }
 
-            return false;
-        }
+    // Вызов при загрузке страницы
+    window.onload = function() {
+        document.getElementById('intro').style.display = 'block'; // Показываем предысторию при загрузке
+    };
+</script>
 
-        function restartGame() {
-            currentPlayer = 'red';
-            gameState = Array(boardSize * boardSize).fill("");
-            statusDisplay.textContent = 'Player Red\'s turn';
-            cells = document.querySelectorAll('.cell');
-            cells.forEach(cell => {
-                cell.innerHTML = '';
-                cell.classList.remove('highlight');
-            });
-            selectedCell = null;
-            soldierType = 'normal';
-            isGameActive = true;
-            createBoard();
-        }
-
-        function upgradeSoldier(type) {
-            soldierType = type;
-            statusDisplay.textContent = 'Player ' + (currentPlayer === 'red' ? 'Red' : 'Blue') + '\'s turn with ' + (type === 'strong' ? 'Strong' : 'Fast') + ' Soldier';
-        }
-
-        createBoard();
-    </script>
 </body>
 </html>
