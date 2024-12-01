@@ -3,452 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Игра Выживание</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+    <title>FUTUREST</title>
     <style>
         body {
-            font-family: 'Roboto Mono', monospace;
-            text-align: center;
-            background-image: url('https://avatars.mds.yandex.net/i?id=76631e6d0849594d71797743abdb0419_l-5185593-images-thumbs&n=13'); /* Новый фон игры */
-            background-size: cover; /* Растянуть изображение на всю страницу */
-            color: #ffffff;
-            margin: 0;
-            padding: 0;
-            padding-top: 60px; /* Сдвигаем на 60px вниз */
-            text-shadow: 2px 2px 5px black; /* Черная обводка текста */
-            font-weight: bold; /* Жирный шрифт */
-        }
-
-        #game {
-            background-color: rgba(61, 61, 61, 0.8);
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            padding: 20px;
-            margin: 20px auto;
-            width: 90%;
-            max-width: 400px;
-            position: relative;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-        }
-
-        .balance {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 15px;
-            background-color: #4c4c4c;
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        .balance-item {
-            font-weight: bold;
-        }
-
-        .button {
-            background-image: url('https://avatars.mds.yandex.net/i?id=5b8cc8379db8add2efb6bb14a3fc5d9e_l-8497639-images-thumbs&n=13');
-            background-size: cover;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: opacity 0.3s, transform 0.1s; /* Добавлено для анимации */
-            text-align: center;
-        }
-
-        .button:hover {
-            opacity: 0.8;
-            transform: scale(1.05); /* Увеличение при наведении */
-        }
-
-        .footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background-color: #4c4c4c;
-            padding: 10px;
-            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.5);
-        }
-
-        .footer-button {
-            width: 100%;
-            background-image: url('https://avatars.mds.yandex.net/i?id=5b8cc8379db8add2efb6bb14a3fc5d9e_l-8497639-images-thumbs&n=13');
-            background-size: cover;
-            border: none;
-            color: white;
-            padding: 15px;
-            cursor: pointer;
-            font-size: 16px;
-            border-radius: 5px;
-            text-align: center;
-            transition: opacity 0.3s, transform 0.1s; /* Добавлено для анимации */
-        }
-
-        .footer-button:hover {
-            opacity: 0.8;
-            transform: scale(1.05); /* Увеличение при наведении */
-        }
-
-        /* Настройки модального окна карты */
-        #map-modal {
-            display: none; /* Скрыть модальное окно по умолчанию */
-            position: fixed;
-            z-index: 2;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: rgba(0, 0, 0, 0.8);
-            padding-top: 60px;
-        }
-
-        .modal-content {
-            background-color: #222222;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 90%;
-            max-width: 600px;
-            position: relative;
-        }
-
-        .close {
-            color: #aaa;
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: white;
-            text-decoration: none;
-        }
-
-        #map-area {
-            background-image: url('https://i.yapx.ru/YOfgS.jpg'); /* Новая текстура карты */
-            background-size: cover; /* Настройка обложки */
-            height: 500px; /* Высота карты */
-            width: 100%;
-            position: relative; /* Устанавливаем элемент в относительное положение */
-            cursor: grab;
-            overflow: hidden; /* Скрыть лишнее содержимое */
-        }
-
-        #resource-area {
-            display: flex;
-            flex-wrap: wrap;
+            align-items: center;
             justify-content: center;
-            margin-top: 20px;
-        }
-
-        .resource-item {
-            font-size: 48px;
-            margin: 10px;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-
-        .resource-item:hover {
-            transform: scale(1.1);
-        }
-
-        #intro {
-            background: rgba(61, 61, 61, 0.9);
-            border-radius: 10px;
-            padding: 20px;
-            max-width: 400px;
-            margin: 20px auto;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        }
-
-        #intro h1 {
-            margin-bottom: 15px;
-        }
-
-        #settlement-name {
-            padding: 10px;
-            border-radius: 5px;
-            border: none;
-            width: 80%;
-            font-size: 16px;
-        }
-
-        .volume-control {
-            margin: 10px;
-        }
-
-        #resource-modal {
-            display: none;
-            position: fixed;
-            z-index: 3;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.8);
-            padding-top: 60px;
-        }
-
-        .resource-content {
-            background-color: #222222;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 90%;
-            max-width: 400px;
-            position: relative;
             color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            animation: gradient 8s ease infinite; /* Анимация градиента */
         }
 
-        #spawn-area {
-            position: relative;
-            width: 100%;
-            height: 300px; /* Задаем высоту для области спавна ресурсов */
+        @keyframes gradient {
+            0% { background-color: #00008B; }
+            25% { background-color: #0000ff; }
+            50% { background-color: #00BFFF; }
+            75% { background-color: #1E90FF; }
+            100% { background-color: #00008B; }
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 300px;
+            height: 100px;
+            padding: 10px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #1E90FF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .response {
+            display: none; /* Скрываем изначально */
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            font-size: 24px;
+            min-width: 300px;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .donate-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #1E90FF;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            line-height: 30px;
+        }
+
+        .donate-button:hover {
+            background-color: #00BFFF;
+        }
+
+        .instruction {
+            margin-top: 60px;
+            font-size: 20px;
+            color: yellow;
+            position: fixed;
+            bottom: 60px;
+            text-align: center;
+        }
+
+        .timer {
+            font-size: 18px;
+            color: yellow;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
+    <h1>FUTUREST</h1>
+    <h2>Бесплатный наставник на любое действие</h2>
+    <div class="timer" id="timer">Следующий вопрос через: 10 сек</div>
+    <textarea id="userInput" placeholder="Введите ваш вопрос..."></textarea>
+    <button onclick="generateResponse()" id="askButton">Получить ответ</button>
+    
+    <div class="response" id="response"></div>
+    <div class="instruction">Первый ответ - самый правильный, остальные - ваши хотелки.</div>
 
-<audio id="background-music" loop>
-    <source src="https://disk.yandex.ru/d/bnlgK68pIfW8Yg" type="audio/mpeg">
-    Ваш браузер не поддерживает аудиотег.
-</audio>
+    <button class="donate-button" onclick="showDonateInfo()">₽</button>
 
-<audio id="button-sound">
-    <source src="https://disk.yandex.ru/d/DvQwNve9JmnYtA" type="audio/mpeg">
-    Ваш браузер не поддерживает аудиотег.
-</audio>
+    <script>
+        const responses = [
+            "Да.", "Нет.", "Возможно.", "Конечно.", "Ни в коем случае.",
+            "Абсолютно.", "Категорически нет.", "Да, точно.",
+            "Вполне возможно.", "Уверенно, да.", "Нет, это не лучший выбор.",
+            "Определенно нет.", "Да, однозначно.", 
+            "Может быть, стоит попробовать.", "Да, следует это сделать.", 
+            "Не думаю.", "Безусловно.", "Сложно сказать.", 
+            "Однозначно да.", "Совершенно нет.", "Непременно.", 
+            "Нет, лучше этого избегать.", "Возможно, это имеет смысл.", 
+            "Конечно, стоит попробовать.", "Ни в коем случае, не стоит.",
+            "Я думаю, да.", "Скорее всего, нет.", "Есть вероятность, что да.",
+            "Боюсь, нет.", "Да, это возможность.", "Это может сработать.",
+            "Нет, не стоит рисковать.", "Да, действуй.", 
+            "Согласен, это правильное решение.", "Не уверен.", 
+            "Да, рекомендую.", "Нет, это не оправдано.", 
+            "Наверняка да.", "Предположительно, нет.",
+            "Это возможно.", "Скорее всего, да.", "Согласен, стоит попробовать.",
+            "Да, начинай действовать.", "Нет, это может быть проблемой.",
+        ];
 
-<div id="intro">
-    <h1>Лорд этих земель</h1>
-    <p>Фух, хорошо что ты пришел! У нас упадок, я не знаю, что делать. Собираюсь свалить отсюда, оставляю этот кусок земли тебе. Удачи!</p>
-    <p>Введите название вашего поселения:</p>
-    <input type="text" id="settlement-name" placeholder="Название поселения" />
-    <button class="button" onclick="startGame(); playButtonSound()">Начать игру</button>
-    <div class="volume-control">
-        <label for="volume">Громкость:</label>
-        <input type="range" id="volume" min="0" max="1" step="0.01" value="1" onchange="setVolume(this.value)">
-        <button class="button" onclick="toggleMute()">Убрать звук</button>
-    </div>
-</div>
+        const sensitiveWords = ["смерть", "убийство", "умереть", "суицид", "убийство", "покончить", "самоубийство"];
 
-<div id="game" style="display: none;">
-    <h1 id="settlement-title">🏝️ Название поселения</h1>
-    <div class="balance">
-        <div class="balance-item">🌳 Дерево: <span id="wood-count">0</span></div>
-        <div class="balance-item">🪨 Камень: <span id="stone-count">0</span></div>
-        <div class="balance-item">🍖 Еда: <span id="food-count">0</span></div>
-        <div class="balance-item">💡 Энергия: <span id="energy-count">5</span>/5</div>
-        <div class="balance-item">👥 Люди: <span id="people-count">0</span></div>
-    </div>
+        let lastQuestionTime = 0;
+        let countdownTimer;
 
-    <div id="resource-area">
-        <!-- Здесь будут появляться ресурсы -->
-    </div>
-</div>
+        function generateResponse() {
+            const currentTime = new Date().getTime();
+            if (currentTime - lastQuestionTime < 10000) {
+                alert("Пожалуйста, подождите перед следующей попыткой. Нужно ждать 10 секунд.");
+                return;
+            }
 
-<div class="footer">
-    <button class="footer-button" onclick="openResourceModal(); playButtonSound()">Добыча ресурсов</button>
-    <button class="footer-button" onclick="openMapModal(); playButtonSound()">Карта</button>
-</div>
+            const userInput = document.getElementById('userInput').value.trim();
+            
+            if (!userInput) {
+                alert("Пожалуйста, введите свой вопрос!"); // Пожелание иначе
+                return;
+            }
 
-<!-- Модальное окно для карты и построек -->
-<div id="map-modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeMapModal()">&times;</span>
-        <h3>Карта</h3>
-        <div id="map-area"></div> <!-- Большой квадрат для карты -->
-    </div>
-</div>
+            // Проверка на наличие чувствительных слов
+            const containsSensitiveWords = sensitiveWords.some(word => userInput.toLowerCase().includes(word));
+            if (containsSensitiveWords) {
+                const response = "Ты что, совсем и не думай о таком!!";
+                animateResponse(response.split(' ').join('_')); // Заменяем пробелы на _
+                startCountdown();
+                return;
+            }
 
-<!-- Модальное окно для добычи ресурсов -->
-<div id="resource-modal">
-    <div class="resource-content">
-        <span class="close" onclick="closeResourceModal()">&times;</span>
-        <h3>Ресурсы</h3>
-        <div id="spawn-area"></div>
-    </div>
-</div>
+            // Проверяем, состоит ли ввод только из одного слова
+            if (userInput.split(' ').length === 1) {
+                const response = "Вау, над ботом так круто шутить, ты гордишься собой?";
+                animateResponse(response.split(' ').join('_')); // Заменяем пробелы на _
+                startCountdown();
+                return;
+            }
 
-<script>
-    let resources = { wood: 0, stone: 0, food: 0 };
-    let energy = 5;
-    let people = 0;
-    let energyMax = 5;
-    let isDragging = false;
-    let startX;
-    let startY;
-    let scrollLeft;
-    let scrollTop;
-    let isMuted = false; // аудиозвук отключён
+            if (!userInput.endsWith("?")) {
+                alert("Пожалуйста, задайте вопрос, заключающийся в вопросительном знаке!");
+                return;
+            }
 
-    // Установить интервал восстановления энергии
-    setInterval(() => {
-        if (energy < energyMax) {
-            energy++;
-            updateStatus();
+            lastQuestionTime = currentTime; // Обновление времени последнего вопроса
+            
+            const randomIndex = Math.floor(Math.random() * responses.length);
+            const response = responses[randomIndex].split(' ').join('_'); // Заменяем пробелы на _
+            animateResponse(response);
+            startCountdown();
         }
-    }, 30000); // Восстанавливаем 1 энергию каждые 30 секунд
 
-    // Функция для инициализации перетаскивания карты
-    function initMapDragging() {
-        const mapArea = document.getElementById('map-area');
-
-        // Обработчик для мыши
-        mapArea.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.pageX - mapArea.offsetLeft;
-            startY = e.pageY - mapArea.offsetTop;
-            scrollLeft = mapArea.scrollLeft;
-            scrollTop = mapArea.scrollTop;
-            mapArea.style.cursor = 'grabbing';
-        });
-
-        mapArea.addEventListener('mouseup', () => {
-            isDragging = false;
-            mapArea.style.cursor = 'grab';
-        });
-
-        mapArea.addEventListener('mouseleave', () => {
-            isDragging = false;
-            mapArea.style.cursor = 'grab';
-        });
-
-        mapArea.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            const x = e.pageX - mapArea.offsetLeft;
-            const y = e.pageY - mapArea.offsetTop;
-            const walkX = (x - startX);
-            const walkY = (y - startY);
-            mapArea.scrollLeft = scrollLeft - walkX;
-            mapArea.scrollTop = scrollTop - walkY;
-        });
-    }
-
-    // Функция для появления ресурсов (дерево и камень)
-    function spawnResource() {
-        const spawnArea = document.getElementById('spawn-area');
-        const resourceItem = document.createElement('div');
-        const resourceType = Math.random() < 0.5 ? '🌳' : '🪨'; // Рандомный выбор
-        resourceItem.className = 'resource-item';
-        resourceItem.innerHTML = resourceType;
-        resourceItem.style.position = 'absolute'; // Устанавливаем абсолютное позиционирование
-        resourceItem.style.left = `${Math.random() * 90}%`; // Случайная позиция по X
-        resourceItem.style.top = `${Math.random() * 90}%`; // Случайная позиция по Y
-        resourceItem.onclick = function() {
-            collectResource(resourceType, resourceItem); // Передаем элемент для удаления
-        };
-        spawnArea.appendChild(resourceItem);
-    }
-
-    // Функция для сбора ресурсов
-    function collectResource(type, element) {
-        if (type === '🌳') {
-            resources.wood++;
-        } else if (type === '🪨') {
-            resources.stone++;
+        function startCountdown() {
+            const timerDisplay = document.getElementById('timer');
+            let timeLeft = 10; // Время ожидания в секундах
+            
+            timerDisplay.innerText = `Следующий вопрос через: ${timeLeft} сек`;
+            clearInterval(countdownTimer); // Очищаем предыдущий таймер если он есть
+            
+            countdownTimer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = `Следующий вопрос через: ${timeLeft} сек`;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownTimer);
+                    timerDisplay.innerText = "Вы готовы задать новый вопрос!";
+                }
+            }, 1000); // Обновление каждую секунду
         }
-        element.remove(); // Удаляем эмодзи после сбора
-        updateStatus();
-    }
 
-    // Открыть окно для добычи ресурсов
-    function openResourceModal() {
-        if (energy <= 0) {
-            alert("Недостаточно энергии для добычи ресурсов!");
-            return;
+        function animateResponse(response) {
+            const responseField = document.getElementById('response');
+            responseField.innerText = ''; // Очистить предыдущий текст
+            responseField.style.display = 'block'; // Показываем ответ
+
+            let index = 0;
+            const typingEffect = setInterval(() => {
+                if (index < response.length) {
+                    responseField.innerText += response.charAt(index);
+                    index++;
+                } else {
+                    clearInterval(typingEffect);
+                    makeBackgroundFlash(); // Вызов вспышки фона после завершения печатания
+                }
+            }, 50); // Скорость печатания (в мс)
         }
-        energy--; // Снижаем энергию на 1 за каждое нажатие на кнопку
-        updateStatus();
-        document.getElementById('resource-modal').style.display = "block";
-        document.getElementById('spawn-area').innerHTML = ''; // Очистить старую область спавна
-        for (let i = 0; i < 5; i++) { // Задаем количество предметов для спавна
-            spawnResource();
+
+        function makeBackgroundFlash() {
+            const originalColor = getComputedStyle(document.body).backgroundColor; // Получить текущий цвет фона
+            document.body.style.backgroundColor = 'white'; // Сделать фон ярче
+            setTimeout(() => {
+                document.body.style.backgroundColor = originalColor; // Вернуться к оригинальному цвету
+            }, 300); // Длительность вспышки (в мс)
         }
-    }
 
-    // Закрыть модальное окно с ресурсами
-    function closeResourceModal() {
-        document.getElementById('resource-modal').style.display = "none";
-    }
-
-    // Функция для открытия модального окна карты
-    function openMapModal() {
-        document.getElementById('map-modal').style.display = "block";
-        initMapDragging(); // Инициализируем перетаскивание карты
-    }
-
-    // Закрыть модальное окно карты
-    function closeMapModal() {
-        document.getElementById('map-modal').style.display = "none";
-    }
-
-    // Функция начала игры
-    function startGame() {
-        const settlementName = document.getElementById('settlement-name').value;
-        if (settlementName.trim() === "") {
-            alert("Пожалуйста, введите название поселения!");
-            return;
+        function showDonateInfo() {
+            alert("Пожалуйста, киньте 1 рубль на Сбер по номеру: +79782464836 для улучшения проекта.");
         }
-        document.getElementById('intro').style.display = 'none';
-        document.getElementById('game').style.display = 'block';
-        document.getElementById('settlement-title').textContent = `🏝️ ${settlementName}`;
-        updateStatus(); // Обновить статус при начале игры
-        playBackgroundMusic(); // Начинаем воспроизводить фоновую музыку
-    }
-
-    // Функция для обновления элементов статуса
-    function updateStatus() {
-        document.getElementById('wood-count').textContent = resources.wood;
-        document.getElementById('stone-count').textContent = resources.stone;
-        document.getElementById('food-count').textContent = resources.food;
-        document.getElementById('energy-count').textContent = energy;
-        document.getElementById('people-count').textContent = people;
-    }
-
-    // Функция воспроизведения фоновой музыки
-    function playBackgroundMusic() {
-        const audio = document.getElementById('background-music');
-        audio.volume = 1; // Установить максимальную громкость по умолчанию
-        audio.play();
-    }
-
-    // Функция воспроизведения звука нажатия кнопок
-    function playButtonSound() {
-        if (isMuted) return; // Если звуки отключены
-        const audio = document.getElementById('button-sound');
-        audio.currentTime = 0; // Сброс времени до начала
-        audio.play();
-    }
-
-    // Установка громкости
-    function setVolume(value) {
-        const audio = document.getElementById('background-music');
-        audio.volume = value;
-    }
-
-    // Переключение звука
-    function toggleMute() {
-        const audio = document.getElementById('background-music');
-        isMuted = !isMuted; // Переключаем состояние
-        audio.muted = isMuted; // Устанавливаем состояние звука
-        alert(isMuted ? "Звук отключен" : "Звук включен");
-    }
-
-    // Вызов при загрузке страницы
-    window.onload = function() {
-        document.getElementById('intro').style.display = 'block'; // Показываем предысторию при загрузке
-    };
-</script>
-
+    </script>
 </body>
 </html>
