@@ -15,33 +15,37 @@
             height: 100vh;
             margin: 0;
             text-align: center;
+            user-select: none; /* Запрет на выделение текста */
         }
         #game-container {
             background-color: #282c34;
             border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             padding: 20px;
-            width: 300px;
+            width: 90%; /* Адаптивная ширина для мобильных */
+            max-width: 380px; /* Максимальная ширина */
             transition: transform 0.2s;
+            position: relative; /* Для позиционирования */
         }
-        #game-container:hover {
-            transform: scale(1.02);
+        #header {
+            display: flex;
+            justify-content: space-between; /* Размещаем элементы по краям */
+            margin-bottom: 20px; /* Отступ снизу для разделения с игрой */
         }
         #grid {
             display: grid;
-            grid-template-columns: repeat(5, 50px);
-            grid-gap: 5px;
+            grid-template-columns: repeat(5, 1fr); /* 5 колонок с адаптивной шириной для квадратов */
+            grid-gap: 5px; /* Расстояние между клетками */
             margin: 20px auto;
             justify-content: center;
         }
         .cell {
-            width: 50px;
-            height: 50px;
+            height: 50px; /* Фиксированная высота клетки */
             background-color: #61dafb;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 30px;
+            font-size: 24px; /* Уменьшаем размер текста для адаптивности */
             color: white;
             cursor: pointer;
             border-radius: 5px;
@@ -49,13 +53,10 @@
         }
         .cell:hover {
             background-color: #21a1f1;
-            transform: scale(1.1);
+            transform: scale(1.05);
         }
         .game-over {
-            background-color: #dc3545;
-        }
-        .hidden {
-            visibility: hidden;
+            background-color: #dc3545; /* Цвет для пустой клетки */
         }
         button {
             background-color: #007bff;
@@ -63,12 +64,12 @@
             color: white;
             padding: 10px 15px;
             text-align: center;
-            text-decoration: none;
             display: inline-block;
             font-size: 16px;
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
+            width: 100%; /* Адаптивная ширина кнопок */
             margin-top: 15px;
         }
         button:hover {
@@ -83,111 +84,63 @@
             font-size: 24px;
         }
         input[type="number"] {
-            width: 50px;
+            width: 60px; /* Ширина для мобильных */
             margin-left: 10px;
             text-align: center;
         }
         .bonus-cell {
             background-color: #ffc107;
         }
+        .hidden {
+            display: none; /* Скрываем элемент */
+        }
     </style>
 </head>
 <body>
 
 <div id="game-container">
+    <div id="header">
+        <h3>Попытки: <span id="attempts">3</span></h3>
+        <div id="balance">Баланс: <span id="balanceAmount">0</span> 💰</div>
+    </div>
     <h3>Дядюшка Слава: если угадаешь, где я спрятал свои монеты, они твои!</h3>
-    <label for="mineCount">Пустые клетки (3-12): </label>
-    <input type="number" id="mineCount" min="3" max="12" value="3">
-    <button id="startButton" onclick="startGame()">Начать игру</button>
-    <h3>Баланс: <span id="balance">0</span> 💰</h3>
-    <h3>Попытки: <span id="attempts">3</span></h3>
-    <h3>Восстановление попыток через: <span id="attemptResetTimer">00:00:00</span></h3>
+    <h3 id="freeAttempt" class="hidden">Бесплатная попытка: <span id="attemptResetTimer">02:00</span></h3>
     <div id="grid"></div>
     <h2 id="result" class="hidden"></h2>
-    <button id="cashOut" onclick="cashOut()" class="hidden">Забрать монеты</button>
-    <div id="extraAttempts" class="hidden">
-        <button onclick="getExtraAttempts()">+1 Попытка</button>
-    </div>
-    <div id="adPrompt" class="hidden">
-        <p>Смотри рекламу за дополнительные попытки.</p>
-        <button onclick="closeAdPrompt()">Назад</button>
-        <button onclick="watchAd()">Смотреть</button>
-    </div>
+
+    <label for="mineCount">Пустые клетки (3-24): </label>
+    <input type="number" id="mineCount" min="3" max="24" value="3">
+
+    <button id="startButton" onclick="startGame()">Начать игру</button>
+
+    <button id="cashOut" onclick="cashOut()" class="hidden">Забрать <span id="cashOutAmount">0</span> монет</button>
 </div>
 
 <script>
     let mineCount;
     let grid;
+    let bonusCellIndex = -1; // Индекс бонусной клетки
+    let tempScore = 0;
     let totalScore = 0;
-    let multiplier = 1;
     let attempts = 3; // Начальное количество попыток
-    const initialCoins = 1; // Начальный баланс
-    const bonusCellChance = 0.3; // 30% шанс спавна бонусной клетки
-    const attemptResetInterval = 10 * 60 * 1000; // 10 минут в миллисекундах
-    let attemptResetTimer;
-
-    // Загружаем сохраненный баланс из localStorage
-    function loadBalance() {
-        const savedBalance = localStorage.getItem('balance');
-        return savedBalance ? parseInt(savedBalance) : 0;
-    }
-
-    // Загружаем время последнего восстановления попыток из localStorage
-    function loadLastResetTime() {
-        const savedTime = localStorage.getItem('lastResetTime');
-        return savedTime ? parseInt(savedTime) : 0;
-    }
-
-    // Сохраняем время последнего восстановления попыток в localStorage
-    function saveLastResetTime() {
-        localStorage.setItem('lastResetTime', Date.now());
-    }
-
-    // Проверяем, нужно ли восстановить попытки
-    function checkAndResetAttempts() {
-        const lastResetTime = loadLastResetTime();
-        const currentTime = Date.now();
-        if (currentTime - lastResetTime >= attemptResetInterval) {
-            attempts = 3; // Восстанавливаем попытки
-            saveLastResetTime(); // Сохраняем время последнего восстановления
-        }
-        document.getElementById('attempts').innerText = attempts; // Обновляем счетчик попыток
-        updateAttemptResetTimer(); // Обновляем таймер восстановления попыток
-    }
-
-    // Обновляем таймер восстановления попыток
-    function updateAttemptResetTimer() {
-        const lastResetTime = loadLastResetTime();
-        const currentTime = Date.now();
-        const timeLeft = attemptResetInterval - (currentTime - lastResetTime);
-        if (timeLeft > 0) {
-            const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-            document.getElementById('attemptResetTimer').innerText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        } else {
-            document.getElementById('attemptResetTimer').innerText = '00:00:00';
-        }
-    }
+    const bonusCellChance = 0.15; // 15% шанс спавна бонусной клетки
+    let timerInterval;
 
     function startGame() {
         if (attempts <= 0) return; // Если попытки исчерпаны, игра не запускается
 
-        // Обнуляем баланс перед началом новой игры
-        totalScore = 0; // Начальный баланс теперь 0
-        document.getElementById('balance').innerText = totalScore; // Обновляем баланс
+        // Обнуляем временные монеты
+        tempScore = 0;
+        document.getElementById('cashOutAmount').innerText = tempScore; // Обновляем временный баланс
 
         // Получаем количество пустых клеток
         mineCount = parseInt(document.getElementById('mineCount').value);
-        if (mineCount < 3 || mineCount > 12) {
-            alert("Пожалуйста, выберите корректное количество пустых клеток (от 3 до 12).");
+        if (mineCount < 3 || mineCount > 24) {
+            alert("Пожалуйста, выберите корректное количество пустых клеток (от 3 до 24).");
             return;
         }
 
         grid = new Array(25).fill(0);
-
-        // Размещение пустых клеток
-        let bonusCellPlaced = false;
         for (let i = 0; i < mineCount; i++) {
             let index;
             do {
@@ -196,24 +149,24 @@
             grid[index] = -1; // -1 обозначает пустую клетку
         }
 
-        // 30% шанс на появление клетки с +1 попыткой
+        // 15% шанс на появление клетки с +1 до +3 попыток
         if (Math.random() < bonusCellChance) {
-            let bonusIndex;
+            // Сохраняем индекс бонусной клетки для отображения в конце
             do {
-                bonusIndex = Math.floor(Math.random() * 25);
-            } while (grid[bonusIndex] === -1);
-            grid[bonusIndex] = 1; // 1 обозначает бонусную клетку
-            alert('Дядюшка Слава предупреждает: припрятал кое-что еще!'); // Предупреждение от Дядюшки Славы
-            bonusCellPlaced = true;
+                bonusCellIndex = Math.floor(Math.random() * 25);
+            } while (grid[bonusCellIndex] === -1);
+            grid[bonusCellIndex] = 1; // 1 обозначает бонусную клетку
+            alert('Дядюшка Слава предупреждает: он спрятал бонусную клетку!'); // Предупреждение
         }
 
-        multiplier = 1;
-        document.getElementById('result').classList.add('hidden');
-        document.getElementById('cashOut').classList.remove('hidden'); // Показываем кнопку забрать монеты
-        renderGrid();
         attempts--; // Уменьшаем количество попыток
         document.getElementById('attempts').innerText = attempts; // Обновляем счетчик попыток
-        document.getElementById('startButton').disabled = false; // Разблокируем кнопку старта после начала игры
+        renderGrid();
+
+        // Показываем бесплатную попытку
+        document.getElementById('freeAttempt').classList.remove('hidden');
+        startTimer();
+        document.getElementById('cashOut').classList.add('hidden'); // Скрываем кнопку забрать монеты
     }
 
     function renderGrid() {
@@ -223,7 +176,9 @@
         grid.forEach((cell, index) => {
             const cellDiv = document.createElement('div');
             cellDiv.className = 'cell';
-            cellDiv.onclick = () => cellClicked(index);
+            cellDiv.onclick = () => {
+                cellClicked(index);
+            }; 
             cellDiv.innerHTML = ''; // Скрываем содержимое
             gridContainer.appendChild(cellDiv);
         });
@@ -234,9 +189,10 @@
 
         if (grid[index] === -1) {
             // Пустая клетка
-            cellDiv.classList.add('game-over');
+            cellDiv.classList.add('game-over'); // Меняем цвет клетки на пустой
             cellDiv.innerHTML = '❌'; // показывает, что клетка пустая
-            endGame(false);
+            showAllMines(); // Показываем все пустые клетки
+            endGame(false); // Игра завершается
         } else if (grid[index] === 1) {
             // Бонусная клетка
             const extraAttempts = Math.floor(Math.random() * 3) + 1; // Добавляем от 1 до 3 попыток
@@ -246,84 +202,78 @@
             document.getElementById('attempts').innerText = attempts; // Обновляем счетчик попыток
         } else {
             // Клетка с монеткой
-            if (totalScore === 0) {
-                totalScore = initialCoins; // Устанавливаем баланс только если он был 0
-            }
-            totalScore += initialCoins * multiplier; // Увеличиваем общий счет
-            multiplier++;
+            const reward = 1 + Math.floor((mineCount - 3) * 0.5); // Вознаграждение более высокое при большем количестве пустых клеток
+            tempScore += reward; // Увеличиваем временный счет на вознаграждение
             cellDiv.innerHTML = '💰'; // показывает, что клетка с монеткой
-            document.getElementById('balance').innerText = totalScore; // Обновляем баланс
+            document.getElementById('cashOutAmount').innerText = tempScore; // Обновляем временный баланс
+            document.getElementById('cashOut').classList.remove('hidden'); // Показываем кнопку "Забрать монеты"
         }
+    }
+
+    function showAllMines() {
+        const gridContainer = document.getElementById('grid');
+        grid.forEach((cell, index) => {
+            const cellDiv = gridContainer.children[index];
+            if (cell === -1) {
+                cellDiv.classList.add('game-over');
+                cellDiv.innerHTML = '❌'; // Показываем пустую клетку
+            } else if (cell === 1 && bonusCellIndex === index) {
+                // Показываем бонусную клетку в конце игры
+                cellDiv.classList.add('bonus-cell');
+                cellDiv.innerHTML = '🎁'; // Показываем, что клетка с бонусом
+            }
+        });
     }
 
     function endGame(isWin) {
-        const gridContainer = document.getElementById('grid');
         const resultText = document.getElementById('result');
         resultText.classList.remove('hidden');
         resultText.innerHTML = isWin
-            ? `Вы выиграли! Ваши монеты: ${totalScore}`
-            : `Игра окончена! Вы наткнулись на пустую клетку. Ваши монеты: ${totalScore}`;
+            ? `Вы выиграли! Ваши временные монеты: ${tempScore}`
+            : `Игра окончена! Вы наткнулись на пустую клетку и потеряли временные монеты.`;
 
-        gridContainer.querySelectorAll('.cell').forEach((cell, index) => {
-            if (grid[index] === -1) {
-                cell.classList.add('game-over');
-                cell.innerHTML = '❌'; // Показывает пустую клетку
-            } else if (grid[index] === 1) {
-                cell.innerHTML = '🎁'; // Показывает бонусную клетку
-            } else {
-                cell.innerHTML = '💰'; // Показывает монету
-            }
-            cell.style.pointerEvents = 'none'; // Блокирует дальнейшие клики
+        // Блокируем дальнейшие клики
+        document.querySelectorAll('.cell').forEach(cell => {
+            cell.style.pointerEvents = 'none'; // Блокируем клетки
         });
 
-        // Снижение количества попыток при завершении игры
-        document.getElementById('attempts').innerText = attempts; // Обновляем счетчик попыток
-
-        if (attempts <= 0) { // Если попытки исчерпаны
-            document.getElementById('extraAttempts').classList.remove('hidden'); // Показываем кнопку для получения дополнительных попыток
-        } else {
-            document.getElementById('startButton').classList.remove('hidden'); // Показываем кнопку "Играть" для продолжения
-        }
-
-        document.getElementById('cashOut').classList.add('hidden'); // Скрываем кнопку "Забрать монеты"
+        clearInterval(timerInterval); // Остановить таймер при окончании игры
+        tempScore = 0; // Обнуляем временные монеты при потере
+        document.getElementById('cashOut').classList.add('hidden'); // Удаляем кнопку "Забрать" при поражении
     }
 
     function cashOut() {
-        const resultText = document.getElementById('result');
-        resultText.classList.remove('hidden');
-        resultText.innerHTML = `Вы забрали монеты! Ваши монеты: ${totalScore}`;
-        const savedBalance = loadBalance();
-        totalScore += savedBalance; // Добавляем текущий счет к сохраненному балансу
-        document.getElementById('balance').innerText = totalScore; // Обновляем баланс на экране
-        saveBalance(); // Сохраняем баланс при выводе
-        endGame(true); // Завершаем игру
+        totalScore += tempScore; // Переносим временные монеты в основной баланс
+        document.getElementById('balanceAmount').innerText = totalScore; // Обновляем основной баланс
+        document.getElementById('cashOutAmount').innerText = 0; // Обнуляем временные монеты
+        tempScore = 0; // Обнуляем временный счет
+        document.getElementById('cashOut').classList.add('hidden'); // Скрываем кнопку "Забрать"
     }
 
-    function getExtraAttempts() {
-        document.getElementById('extraAttempts').classList.add('hidden'); // Скрываем кнопку
-        document.getElementById('adPrompt').classList.remove('hidden'); // Показываем окно для рекламы
+    function startTimer() {
+        let timeRemaining = 2 * 60; // Устанавливаем 2 минуты в секундах
+        timerInterval = setInterval(() => {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            document.getElementById('attemptResetTimer').innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            timeRemaining--;
+
+            if (timeRemaining < 0) {
+                clearInterval(timerInterval);
+                if (attempts < 3) {
+                    attempts++; // Увеличиваем попытки
+                    document.getElementById('attempts').innerText = attempts; // Обновляем отображение
+                    alert("У вас новая бесплатная попытка!"); // Уведомление пользователю
+                }
+                startTimer(); // Перезапускаем таймер
+            }
+        }, 1000); // Обновляем каждую секунду
     }
 
-    function closeAdPrompt() {
-        document.getElementById('adPrompt').classList.add('hidden'); // Закрываем окно
-        document.getElementById('extraAttempts').classList.remove('hidden'); // Возвращаем кнопку
-    }
-
-    function watchAd() {
-        // Здесь будет вызов функции для просмотра рекламы
-        alert('Реклама будет показана, но функционал пока не реализован.');
-        closeAdPrompt();
-    }
-
-    function saveBalance() {
-        localStorage.setItem('balance', totalScore);
-    }
-
-    // Проверяем и восстанавливаем попытки при загрузке страницы
     window.onload = function() {
-        checkAndResetAttempts();
-        document.getElementById('balance').innerText = 0; // Устанавливаем баланс в 0 при загрузке страницы
-        attemptResetTimer = setInterval(updateAttemptResetTimer, 1000); // Обновляем таймер каждую секунду
+        document.getElementById('attempts').innerText = attempts; // Устанавливаем начальное количество попыток
+        document.getElementById('cashOutAmount').innerText = 0; // Обнуляем временный баланс
+        document.getElementById('balanceAmount').innerText = totalScore; // Устанавливаем начальный баланс
     };
 </script>
 
