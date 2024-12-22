@@ -196,13 +196,13 @@
         } else if (grid[index] === 1) {
             // Бонусная клетка
             const extraAttempts = Math.floor(Math.random() * 3) + 1; // Добавляем от 1 до 3 попыток
-            attempts += extraAttempts;
+            attempts += extraAttempts; // Увеличиваем количество попыток
             cellDiv.classList.add('bonus-cell');
             cellDiv.innerHTML = `🎁 +${extraAttempts}`; // показывает, что клетка с бонусом
             document.getElementById('attempts').innerText = attempts; // Обновляем счетчик попыток
         } else {
             // Клетка с монеткой
-            const reward = 1 + Math.floor((mineCount - 3) * 0.5); // Вознаграждение более высокое при большем количестве пустых клеток
+            const reward = 1 + Math.floor((mineCount - 3) * 0.5); // Вознаграждение более высокое при большом количестве пустых клеток
             tempScore += reward; // Увеличиваем временный счет на вознаграждение
             cellDiv.innerHTML = '💰'; // показывает, что клетка с монеткой
             document.getElementById('cashOutAmount').innerText = tempScore; // Обновляем временный баланс
@@ -248,6 +248,18 @@
         document.getElementById('cashOutAmount').innerText = 0; // Обнуляем временные монеты
         tempScore = 0; // Обнуляем временный счет
         document.getElementById('cashOut').classList.add('hidden'); // Скрываем кнопку "Забрать"
+        resetGame(); // Сбрасываем игру для следующего раунда
+    }
+
+    function resetGame() {
+        // Сбрасываем состояние игры
+        document.getElementById('result').classList.add('hidden'); // Скрываем результат
+        renderGrid(); // Обновляем поле
+        clearInterval(timerInterval); // Останавливаем таймер
+        document.getElementById('freeAttempt').classList.add('hidden'); // Скрываем информацию о бесплатной попытке
+        document.querySelectorAll('.cell').forEach(cell => {
+            cell.style.pointerEvents = 'none'; // Блокируем клетки пока не начнется новая игра
+        });
     }
 
     function startTimer() {
