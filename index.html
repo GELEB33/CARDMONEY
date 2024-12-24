@@ -1,46 +1,265 @@
-<!DOCTYPE html>
+<!DOCTYPEhtml>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Скрытые Минные Клетки</title>
+    <title>CardMoney</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #181818;
+            background-color: #121212;
             color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            font-family: Arial, sans-serif;
             margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
             text-align: center;
-            user-select: none; /* Запрет на выделение текста */
+            user-select: none; /* Запрет копирования текста */
         }
+
+        .header {
+            margin-top: 20px;
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .balance {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2em;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .balance span {
+            margin-right: 10px;
+        }
+
+        .add-button {
+            background-color: #007bff;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 20px; /* Размер иконки */
+            margin-left: 10px; /* Отступ от монетного баланса */
+        }
+
+        .menu {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .menu button {
+            background-color: #333333;
+            color: #ffffff;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 80%;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .menu button:hover {
+            background-color: #444444;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: rgba(0, 0, 0, 0.9);
+            justify-content: center;
+            align-items: center; /* Центрируем содержимое */
+        }
+
+        .modal-content {
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            width: 90%;
+            max-width: 500px; /* Максимальная ширина модального окна */
+            border: 2px solid #ffffff; /* Рамка для окна */
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); /* Тень для модального окна */
+            overflow-y: auto; /* Прокрутка по вертикали */
+        }
+
+        .close {
+            color: #aaaaaa;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        /* Сетка для колод */
+        .deck-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .deck {
+            width: 100%;
+            height: 250px; /* Высота колоды */
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            background-color: #555555; /* Фон колоды */
+            border: 3px solid #ffffff; /* Белая рамка */
+            cursor: pointer;
+            transition: transform 0.2s; /* Плавный переход при наведении */
+        }
+
+        .deck:hover {
+            transform: scale(1.05); /* Увеличиваем при наведении */
+        }
+
+        .deck-image {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0; /* Под всеми элементами */
+        }
+
+        .deck-name {
+            font-size: 1.2em; /* Увеличиваем размер имени колоды */
+            position: relative;
+            z-index: 1;
+            color: #ffffff;
+            margin-top: 0; /* Убираем отступ */
+            margin-bottom: 5px; /* Отступ ниже для разделения с изображением */
+            text-align: left; /* Выравнивание по левому краю */
+            width: 90%; /* Ширина текста */
+            margin-left: 10%; /* Сдвиг текста от края */
+        }
+
+        /* Сетка для карт */
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* Увеличена минимальная ширина */
+            gap: 20px;
+        }
+
+        .card {
+            width: 100%;
+            height: 320px; /* Высота карты увеличена */
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            background-color: transparent; /* Убираем фон */
+            border: 3px solid #ffffff; /* Белая рамка */
+            cursor: pointer;
+            transition: transform 0.2s; /* Плавный переход при наведении */
+        }
+
+        .card:hover {
+            transform: scale(1.05); /* Увеличиваем при наведении */
+        }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute; /* Позиционируем изображение */
+            top: 0;
+            left: 0;
+            z-index: 1; /* помещаем изображения ниже текста */
+        }
+
+        .card-name {
+            font-size: 1.5em; /* Увеличиваем размер имени карты */
+            font-weight: bold;
+            position: absolute; /* Позиционируем текст поверх изображения */
+            z-index: 2; /* выше изображений */
+            color: #ffffff;
+            text-align: center;
+            bottom: 50px; /* Позиционирование имени карты */
+        }
+
+        .card-count {
+            font-size: 1em;
+            position: absolute; /* Позиционируем текст поверх изображения */
+            z-index: 2; /* выше изображений */
+            color: #ffffff;
+            text-align: center;
+            bottom: 10px; /* Позиционирование количества карт */
+        }
+
+        /* Светящиеся рамки для карт */
+        .valet {
+            box-shadow: 0 0 20px rgba(180, 115, 30, 1.0); /* Древесная рамка для Валета */
+        }
+
+        .dama {
+            box-shadow: 0 0 20px rgba(192, 192, 192, 1.0); /* Серебряная рамка для Дамы */
+        }
+
+        .king {
+            box-shadow: 0 0 20px rgba(255, 215, 0, 1.0); /* Золотая рамка для Короля */
+        }
+
+        .tuz {
+            box-shadow: 0 0 20px rgba(0, 255, 255, 1.0); /* Алмазная рамка для Туза */
+        }
+
+        /* Стиль для игровой страницы */
         #game-container {
             background-color: #282c34;
             border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             padding: 20px;
-            width: 90%; /* Адаптивная ширина для мобильных */
-            max-width: 380px; /* Максимальная ширина */
-            transition: transform 0.2s;
-            position: relative; /* Для позиционирования */
+            width: 100%; /* Занимает всю ширину */
+            max-width: 800px; /* Максимальная ширина игрового окна */
+            margin: 20px auto; /* Центрирование игрового контейнера */
+            display: none; /* Скрыто по умолчанию */
+            position: relative; /* Позволяет центровать элемент */
+            top: 50%; /* Сдвиг вниз */
+            transform: translateY(-50%); /* Центрирование по вертикали */
         }
-        #header {
-            display: flex;
-            justify-content: space-between; /* Размещаем элементы по краям */
-            margin-bottom: 20px; /* Отступ снизу для разделения с игрой */
-        }
+
         #grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr); /* 5 колонок с адаптивной шириной для квадратов */
-            grid-gap: 5px; /* Расстояние между клетками */
-            margin: 20px auto;
-            justify-content: center;
+            grid-template-columns: repeat(5, 1fr); /* 5 клеток в строке */
+            gap: 10px; /* Отступы между клетками */
+            aspect-ratio: 1; /* Сделаем поле квадратным */
+            height: 500px; /* Высота игрового поля */
+            margin: 0 auto; /* Центрирование игрового поля */
         }
+
         .cell {
-            height: 50px; /* Фиксированная высота клетки */
             background-color: #61dafb;
             display: flex;
             justify-content: center;
@@ -50,14 +269,20 @@
             cursor: pointer;
             border-radius: 5px;
             transition: background-color 0.3s, transform 0.1s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Немного тени для клеток */
+            aspect-ratio: 1; /* Клетки квадратные */
+            overflow: hidden; /* Скрываем лишнее содержимое */
         }
+
         .cell:hover {
             background-color: #21a1f1;
             transform: scale(1.05);
         }
+
         .game-over {
             background-color: #dc3545; /* Цвет для пустой клетки */
         }
+
         button {
             background-color: #007bff;
             border: none;
@@ -72,222 +297,537 @@
             width: 100%; /* Адаптивная ширина кнопок */
             margin-top: 15px;
         }
+
         button:hover {
             background-color: #0056b3;
         }
-        h3 {
+
+        h3, h2 {
             margin: 0;
-            font-size: 20px;
             font-weight: normal;
         }
+
+        h3 {
+            font-size: 20px;
+        }
+
         h2 {
             font-size: 24px;
         }
+
         input[type="number"] {
             width: 60px; /* Ширина для мобильных */
             margin-left: 10px;
             text-align: center;
         }
+
         .bonus-cell {
-            background-color: #ffc107;
+            background-color: #ffc107; /* Цвет для бонусной клетки */
         }
+
         .hidden {
             display: none; /* Скрываем элемент */
+        }
+
+        #slider {
+            margin: 20px; /* Отступ для ползунка */
+            width: 80%; /* Адаптивная ширина */
+        }
+
+        .reward-message {
+            font-size: 1.5em;
+            margin: 20px;
+            color: #00ff00; /* Зеленый цвет для поздравления */
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between; /* Разделение кнопок */
+            margin-top: 20px; /* Отступ сверху */
+        }
+
+        .mine-count-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .mine-count-label {
+            font-size: 1.2em;
+            margin-right: 10px;
+        }
+
+        .mine-count-value {
+            font-size: 1.2em;
+            margin-left: 10px;
+        }
+
+        .mine-count-slider {
+            width: 80%;
+            margin-left: 10px;
+        }
+
+        .welcome-modal {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .welcome-modal img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .welcome-modal h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .welcome-modal p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .welcome-modal button {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-
-<div id="game-container">
-    <div id="header">
-        <h3>Попытки: <span id="attempts">3</span></h3>
-        <div id="balance">Баланс: <span id="balanceAmount">0</span> 💰</div>
+    <div class="header">CardMoney</div>
+    <div class="balance">
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+            <span>Монеты: 💰</span>
+            <span id="totalBalance">0</span>
+            <button class="add-button" onclick="openAdModal()">+</button>
+        </div>
+        <div style="display: flex; align-items: center;">
+            <span>Бриллианты: 💎</span>
+            <span id="diamondBalance">0</span>
+        </div>
     </div>
-    <h3>Дядюшка Слава: если угадаешь, где я спрятал свои монеты, они твои!</h3>
-    <h3 id="freeAttempt" class="hidden">Бесплатная попытка: <span id="attemptResetTimer">02:00</span></h3>
-    <div id="grid"></div>
-    <h2 id="result" class="hidden"></h2>
+    <div class="menu">
+        <button onclick="playGame()">Играть</button>
+        <button onclick="openDeckModal()">Колоды</button>
+    </div>
 
-    <label for="mineCount">Пустые клетки (3-24): </label>
-    <input type="number" id="mineCount" min="3" max="24" value="3">
+    <!-- Модальное окно для рекламы -->
+    <div id="adModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAdModal()">&times;</span>
+            <h2>Посмотреть рекламу</h2>
+            <p>Смотрение рекламы даст вам 20 монет!</p>
+            <button onclick="watchAd()">Смотреть рекламу</button>
+        </div>
+    </div>
 
-    <button id="startButton" onclick="startGame()">Начать игру</button>
+    <!-- Модальное окно для колод -->
+    <div id="deckModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeDeckModal()">&times;</span>
+            <h2>Колоды</h2>
+            <div class="deck-container">
+                <div class="deck" onclick="openClassicDeck()">
+                    <div class="deck-name">Классическая</div>
+                    <img class="deck-image" src="https://i.pinimg.com/originals/a4/d4/ac/a4d4ac0acc9bfdf7a30beeb23170ce24.jpg" alt="Классическая колода">
+                    <span class="deck-count" id="classicDeckCount">x0</span> <!-- Обновленный счетчик колоды -->
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <button id="cashOut" onclick="cashOut()" class="hidden">Забрать <span id="cashOutAmount">0</span> монет</button>
-</div>
+    <!-- Модальное окно для классической колоды -->
+    <div id="classicDeckModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeClassicDeckModal()">&times;</span>
+            <h2>Карты Классической Колоды</h2>
+            <div class="card-container">
+                <div class="card valet" onclick="showCardInfo('Валет', 'Обычная карта', 'x0', 'Уменьшает таймер на 5%')">
+                    <img src="https://i.postimg.cc/2ybJZLyC/5424615245164440207.jpg" alt="Валет">
+                    <span class="card-name">Валет</span>
+                    <span class="card-count">x0</span>
+                </div>
+                <div class="card dama" onclick="showCardInfo('Дама', 'Необычная карта', 'x0', 'Увеличивает шанс появления бонусной клетки на 5%')">
+                    <img src="https://i.postimg.cc/QxpD4vNh/5422821976059276714.jpg" alt="Дама">
+                    <span class="card-name">Дама</span>
+                    <span class="card-count">x0</span>
+                </div>
+                <div class="card king" onclick="showCardInfo('Король', 'Великая карта', 'x0', 'Потенциальный двойной выигрыш на 3%')">
+                    <img src="https://i.postimg.cc/3NmsqDTn/5422821976059276715.jpg" alt="Король">
+                    <span class="card-name">Король</span>
+                    <span class="card-count">x0</span>
+                </div>
+                <div class="card tuz" onclick="showCardInfo('Туз', 'ИМБОВАЯ карта', 'x0', 'Возможность поставить 0 пустых клеток')">
+                    <img src="https://i.postimg.cc/tCt0tPDg/5422821976059276716.jpg" alt="Туз">
+                    <span class="card-name">Туз</span>
+                    <span class="card-count">x0</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script>
-    let mineCount;
-    let grid;
-    let bonusCellIndex = -1; // Индекс бонусной клетки
-    let tempScore = 0;
-    let totalScore = 0;
-    let attempts = 3; // Начальное количество попыток
-    const bonusCellChance = 0.15; // 15% шанс спавна бонусной клетки
-    let timerInterval;
+    <!-- Модальное окно для информации о карте -->
+    <div id="cardInfoModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCardInfoModal()">&times;</span>
+            <h2 id="cardTitle" style="text-align: center;"></h2>
+            <p id="cardRarity" style="font-size: 1.2em; text-align: center;"></p>
+            <p id="cardAbility" style="text-align: center;"></p>
+            <p id="cardCountUpgrade" style="text-align: center;"></p>
+            <button onclick="upgradeCard()" id="upgradeButton" class="hidden">Улучшить (50 монет)</button>
+        </div>
+    </div>
 
-    function startGame() {
-        if (attempts <= 0) return; // Если попытки исчерпаны, игра не запускается
+    <!-- Игровое окно -->
+    <div id="game-container">
+        <div id="header">
+            <h3>Попытки: <span id="attempts">5</span></h3>
+            <div id="balance">Баланс: <span id="balanceAmount">0</span> 💰</div>
+            <h2>Угадайте, где спрятаны монеты!</h2>
+            <h3 id="freeAttempt" class="hidden">Бесплатная попытка: <span id="attemptResetTimer">02:00</span></h3>
+        </div>
+        <div id="grid"></div>
+        <div class="mine-count-container">
+            <label for="mineCount" class="mine-count-label">Пустые клетки (3-24):</label>
+            <span id="mineCountDisplay" class="mine-count-value">3</span>
+            <input type="range" min="3" max="24" value="3" class="mine-count-slider" oninput="updateMineCount(this.value)">
+        </div>
+        <div class="button-container">
+            <button id="startButton" onclick="startGame()">Начать игру</button>
+            <button id="cashOut" onclick="cashOut()" class="hidden">Забрать <span id="cashOutAmount">0</span> монет</button>
+        </div>
+        <button id="exitButton" onclick="exitGame()" class="hidden">Выйти в главное меню</button>
+        <div id="rewardMessage" class="reward-message hidden"></div> <!-- Сообщение о награде -->
+    </div>
 
-        // Обнуляем временные монеты
-        tempScore = 0;
-        document.getElementById('cashOutAmount').innerText = tempScore; // Обновляем временный баланс
+    <!-- Модальное окно для новых игроков -->
+    <div id="welcomeModal" class="modal">
+        <div class="welcome-modal">
+            <h2>Тетушка Рита</h2>
+            <img src="https://example.com/path-to-your-image.jpg" alt="Тетушка Рита">
+            <p>Привет, поможешь мне собрать всю коллекцию карт играя в эту простую аркадную игру?</p>
+            <button onclick="closeWelcomeModal()">Хорошо</button>
+        </div>
+    </div>
 
-        // Получаем количество пустых клеток
-        mineCount = parseInt(document.getElementById('mineCount').value);
-        if (mineCount < 3 || mineCount > 24) {
-            alert("Пожалуйста, выберите корректное количество пустых клеток (от 3 до 24).");
-            return;
+    <script>
+        let totalScore = 0; // Общий счёт игрока
+        let diamondCount = 0; // Количество бриллиантов
+        let currentTempScore = 0; // Временный счет для текущей игры
+        let mineCount = 3; // Количество пустых клеток по умолчанию
+        let attempts = 5; // Количество попыток
+        let grid = []; // Игровое поле
+        let usedCells = new Set(); // Набор для использованных клеток
+        let timerInterval; // Интервал для таймера
+        let bonusCellChance = 0.1; // Шанс появления бонусной клетки
+        let bonusCellIndex; // Индекс бонусной клетки
+        const cards = {
+            'Валет': { count: 0, level: 0, upgradeCost: 50 },
+            'Дама': { count: 0, level: 0, upgradeCost: 100 },
+            'Король': { count: 0, level: 0, upgradeCost: 150 },
+            'Туз': { count: 0, level: 0, upgradeCost: 200 }
+        };
+
+        function playGame() {
+            document.querySelector('.menu').style.display = 'none'; // Скрываем главное меню
+            document.getElementById('game-container').style.display = 'block'; // Показываем игровое окно
+            startGame(); // Запускаем игру
         }
 
-        grid = new Array(25).fill(0);
-        for (let i = 0; i < mineCount; i++) {
-            let index;
-            do {
-                index = Math.floor(Math.random() * 25);
-            } while (grid[index] === -1);
-            grid[index] = -1; // -1 обозначает пустую клетку
+        function exitGame() {
+            document.getElementById('game-container').style.display = 'none'; // Скрываем игровое окно
+            resetGame(); // Сбрасываем состояние игры
+            document.querySelector('.menu').style.display = 'flex'; // Показываем меню
         }
 
-        // 15% шанс на появление клетки с +1 до +3 попыток
-        if (Math.random() < bonusCellChance) {
-            // Сохраняем индекс бонусной клетки для отображения в конце
-            do {
-                bonusCellIndex = Math.floor(Math.random() * 25);
-            } while (grid[bonusCellIndex] === -1);
-            grid[bonusCellIndex] = 1; // 1 обозначает бонусную клетку
-            alert('Дядюшка Слава предупреждает: он спрятал бонусную клетку!'); // Предупреждение
+        function openAdModal() {
+            document.getElementById('adModal').style.display = 'flex'; // Открываем модальное окно рекламы
         }
 
-        attempts--; // Уменьшаем количество попыток
-        document.getElementById('attempts').innerText = attempts; // Обновляем счетчик попыток
-        renderGrid();
-
-        // Показываем бесплатную попытку
-        document.getElementById('freeAttempt').classList.remove('hidden');
-        startTimer();
-        document.getElementById('cashOut').classList.add('hidden'); // Скрываем кнопку забрать монеты
-    }
-
-    function renderGrid() {
-        const gridContainer = document.getElementById('grid');
-        gridContainer.innerHTML = '';
-
-        grid.forEach((cell, index) => {
-            const cellDiv = document.createElement('div');
-            cellDiv.className = 'cell';
-            cellDiv.onclick = () => {
-                cellClicked(index);
-            }; 
-            cellDiv.innerHTML = ''; // Скрываем содержимое
-            gridContainer.appendChild(cellDiv);
-        });
-    }
-
-    function cellClicked(index) {
-        const cellDiv = document.querySelectorAll('.cell')[index];
-
-        if (grid[index] === -1) {
-            // Пустая клетка
-            cellDiv.classList.add('game-over'); // Меняем цвет клетки на пустой
-            cellDiv.innerHTML = '❌'; // показывает, что клетка пустая
-            showAllMines(); // Показываем все пустые клетки
-            endGame(false); // Игра завершается
-        } else if (grid[index] === 1) {
-            // Бонусная клетка
-            const extraAttempts = Math.floor(Math.random() * 3) + 1; // Добавляем от 1 до 3 попыток
-            attempts += extraAttempts; // Увеличиваем количество попыток
-            cellDiv.classList.add('bonus-cell');
-            cellDiv.innerHTML = `🎁 +${extraAttempts}`; // показывает, что клетка с бонусом
-            document.getElementById('attempts').innerText = attempts; // Обновляем счетчик попыток
-        } else {
-            // Клетка с монеткой
-            const reward = 1 + Math.floor((mineCount - 3) * 0.5); // Вознаграждение более высокое при большом количестве пустых клеток
-            tempScore += reward; // Увеличиваем временный счет на вознаграждение
-            cellDiv.innerHTML = '💰'; // показывает, что клетка с монеткой
-            document.getElementById('cashOutAmount').innerText = tempScore; // Обновляем временный баланс
-            document.getElementById('cashOut').classList.remove('hidden'); // Показываем кнопку "Забрать монеты"
+        function closeAdModal() {
+            document.getElementById('adModal').style.display = 'none'; // Закрываем модальное окно рекламы
         }
-    }
 
-    function showAllMines() {
-        const gridContainer = document.getElementById('grid');
-        grid.forEach((cell, index) => {
-            const cellDiv = gridContainer.children[index];
-            if (cell === -1) {
-                cellDiv.classList.add('game-over');
-                cellDiv.innerHTML = '❌'; // Показываем пустую клетку
-            } else if (cell === 1 && bonusCellIndex === index) {
-                // Показываем бонусную клетку в конце игры
-                cellDiv.classList.add('bonus-cell');
-                cellDiv.innerHTML = '🎁'; // Показываем, что клетка с бонусом
+        function watchAd() {
+            if (totalScore >= 20) {
+                totalScore -= 20; // Снимаем 20 монет за просмотр рекламы
+                document.getElementById('totalBalance').innerText = totalScore; // Обновляем баланс
+                alert("Спасибо за просмотр рекламы! Вы получили 20 монет."); // Уведомляем игрока
+                totalScore += 20; // Добавляем 20 монет
+                document.getElementById('totalBalance').innerText = totalScore; // Обновляем баланс
+            } else {
+                alert("У вас недостаточно монет для просмотра рекламы."); // Уведомляем о недостатке монет
             }
-        });
-    }
+            closeAdModal(); // Закрываем модальное окно
+        }
 
-    function endGame(isWin) {
-        const resultText = document.getElementById('result');
-        resultText.classList.remove('hidden');
-        resultText.innerHTML = isWin
-            ? `Вы выиграли! Ваши временные монеты: ${tempScore}`
-            : `Игра окончена! Вы наткнулись на пустую клетку и потеряли временные монеты.`;
+        function openDeckModal() {
+            document.getElementById('deckModal').style.display = 'flex'; // Показываем модальное окно колод
+        }
 
-        // Блокируем дальнейшие клики
-        document.querySelectorAll('.cell').forEach(cell => {
-            cell.style.pointerEvents = 'none'; // Блокируем клетки
-        });
+        function closeDeckModal() {
+            document.getElementById('deckModal').style.display = 'none'; // Скрываем модальное окно колод
+        }
 
-        clearInterval(timerInterval); // Остановить таймер при окончании игры
-        tempScore = 0; // Обнуляем временные монеты при потере
-        document.getElementById('cashOut').classList.add('hidden'); // Удаляем кнопку "Забрать" при поражении
-    }
+        function openClassicDeck() {
+            document.getElementById('classicDeckModal').style.display = 'flex'; // Показываем модальное окно классической колоды
+            updateDeckCount(); // Обновляем количество карт
+        }
 
-    function cashOut() {
-        totalScore += tempScore; // Переносим временные монеты в основной баланс
-        document.getElementById('balanceAmount').innerText = totalScore; // Обновляем основной баланс
-        document.getElementById('cashOutAmount').innerText = 0; // Обнуляем временные монеты
-        tempScore = 0; // Обнуляем временный счет
-        document.getElementById('cashOut').classList.add('hidden'); // Скрываем кнопку "Забрать"
-        resetGame(); // Сбрасываем игру для следующего раунда
-    }
+        function closeClassicDeckModal() {
+            document.getElementById('classicDeckModal').style.display = 'none'; // Скрываем модальное окно классической колоды
+        }
 
-    function resetGame() {
-        // Сбрасываем состояние игры
-        document.getElementById('result').classList.add('hidden'); // Скрываем результат
-        renderGrid(); // Обновляем поле
-        clearInterval(timerInterval); // Останавливаем таймер
-        document.getElementById('freeAttempt').classList.add('hidden'); // Скрываем информацию о бесплатной попытке
-        document.querySelectorAll('.cell').forEach(cell => {
-            cell.style.pointerEvents = 'none'; // Блокируем клетки пока не начнется новая игра
-        });
-    }
+        function updateDeckCount() {
+            document.getElementById('classicDeckCount').innerText = `x${cards['Валет'].count + cards['Дама'].count + cards['Король'].count + cards['Туз'].count}`; // Обновляем общее количество карт
+        }
 
-    function startTimer() {
-        let timeRemaining = 2 * 60; // Устанавливаем 2 минуты в секундах
-        timerInterval = setInterval(() => {
-            const minutes = Math.floor(timeRemaining / 60);
-            const seconds = timeRemaining % 60;
-            document.getElementById('attemptResetTimer').innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            timeRemaining--;
+        function startGame() {
+            if (attempts <= 0) return; // Если попытки исчерпаны, игра не запускается
 
-            if (timeRemaining < 0) {
-                clearInterval(timerInterval);
-                if (attempts < 3) {
-                    attempts++; // Увеличиваем попытки
-                    document.getElementById('attempts').innerText = attempts; // Обновляем отображение
-                    alert("У вас новая бесплатная попытка!"); // Уведомление пользователю
+            currentTempScore = 0; // Обнуляем временные монеты
+            document.getElementById('cashOutAmount').innerText = currentTempScore; // Обновляем временный баланс
+
+            mineCount = parseInt(document.getElementById('mineCountDisplay').innerText); // Получаем значение пустых клеток
+            grid = Array(25).fill(0); // Инициализируем сетку 5x5
+
+            // Генерация пустых клеток
+            let placedMines = 0;
+            while (placedMines < mineCount) {
+                const index = Math.floor(Math.random() * 25);
+                if (grid[index] === 0) {
+                    grid[index] = -1; // -1 обозначает пустую клетку
+                    placedMines++;
                 }
-                startTimer(); // Перезапускаем таймер
             }
-        }, 1000); // Обновляем каждую секунду
-    }
 
-    window.onload = function() {
-        document.getElementById('attempts').innerText = attempts; // Устанавливаем начальное количество попыток
-        document.getElementById('cashOutAmount').innerText = 0; // Обнуляем временный баланс
-        document.getElementById('balanceAmount').innerText = totalScore; // Устанавливаем начальный баланс
-    };
-</script>
+            // Генерация бонусной клетки
+            if (Math.random() < bonusCellChance) {
+                do {
+                    bonusCellIndex = Math.floor(Math.random() * 25);
+                } while (grid[bonusCellIndex] === -1);
+                grid[bonusCellIndex] = 1; // 1 обозначает бонусную клетку
+                showRewardMessage('Бонусная клетка появилась на поле!');
+            }
 
+            renderGrid(); // Отображаем игровое поле
+            attempts--; // Уменьшаем количество попыток
+            document.getElementById('attempts').innerText = attempts; // Обновляем счетчик попыток
+            document.getElementById('freeAttempt').classList.remove('hidden'); // Показываем информацию о бесплатной попытке
+            startTimer(); // Запускаем таймер
+            toggleCellClickability(true); // Позволяем кликать на клетках
+        }
+
+        function renderGrid() {
+            const gridContainer = document.getElementById('grid');
+            gridContainer.innerHTML = ''; // Очищаем старые клетки
+
+            grid.forEach((cell, index) => {
+                const cellDiv = document.createElement('div');
+                cellDiv.className = 'cell';
+                cellDiv.onclick = () => {
+                    cellClicked(index);
+                };
+                cellDiv.innerHTML = ''; // Скрываем содержимое
+                gridContainer.appendChild(cellDiv);
+            });
+        }
+
+        function toggleCellClickability(isClickable) {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.style.pointerEvents = isClickable ? 'auto' : 'none'; // Включаем или отключаем кликабельность клеток
+            });
+        }
+
+        function cellClicked(index) {
+            if (usedCells.has(index)) return; // Проверяем, использовалась ли клетка ранее
+
+            const cellDiv = document.querySelectorAll('.cell')[index];
+            usedCells.add(index); // Добавляем клетку в использованные
+
+            if (grid[index] === -1) {
+                cellDiv.classList.add('game-over'); // Меняем цвет клетки на пустую
+                cellDiv.innerHTML = '❌'; // Показываем, что клетка пустая
+                showAllMines(); // Показываем все пустые клетки
+                endGame(false); // Игра завершается
+            } else if (grid[index] === 1) {
+                const extraAttempts = Math.floor(Math.random() * 3) + 1; // Добавляем от 1 до 3 попыток
+                attempts += extraAttempts; // Увеличиваем количество попыток
+                cellDiv.classList.add('bonus-cell');
+                cellDiv.innerHTML = `🎁 +${extraAttempts}`; // Показываем, что клетка с бонусом
+                document.getElementById('attempts').innerText = attempts; // Обновляем счетчик попыток
+            } else {
+                const reward = 1 + Math.floor((mineCount - 3) * 0.5); // Вознаграждение более высокое при большом количестве пустых клеток
+                currentTempScore += reward; // Увеличиваем временный счет на вознаграждение
+                cellDiv.innerHTML = '💰'; // Показываем, что клетка с монеткой
+                document.getElementById('cashOutAmount').innerText = currentTempScore; // Обновляем временный баланс
+                document.getElementById('cashOut').classList.remove('hidden'); // Показываем кнопку "Забрать"
+            }
+        }
+
+        function showAllMines() {
+            const gridContainer = document.getElementById('grid');
+            grid.forEach((cell, index) => {
+                const cellDiv = gridContainer.children[index];
+                if (cell === -1) {
+                    cellDiv.classList.add('game-over');
+                    cellDiv.innerHTML = '❌'; // Показываем пустую клетку
+                } else if (cell === 1 && bonusCellIndex === index) {
+                    cellDiv.classList.add('bonus-cell');
+                    cellDiv.innerHTML = '🎁'; // Показываем, что клетка с бонусом
+                }
+            });
+        }
+
+        function endGame(isWin) {
+            const resultText = document.getElementById('rewardMessage');
+            resultText.classList.remove('hidden');
+            resultText.innerHTML = isWin
+                ? `Вы выиграли! Ваши временные монеты: ${currentTempScore}`
+                : `Игра окончена! Вы наткнулись на пустую клетку и потеряли временные монеты.`;
+
+            toggleCellClickability(false); // Блокируем дальнейшие клики
+            clearInterval(timerInterval); // Останавливаем таймер при окончании игры
+            if (isWin) {
+                totalScore += currentTempScore; // Переносим временные монеты в основной баланс
+            }
+            document.getElementById('totalBalance').innerText = totalScore; // Обновляем баланс
+            currentTempScore = 0; // Обнуляем временные монеты
+            document.getElementById('cashOut').classList.add('hidden'); // Скрываем кнопку "Забрать" при поражении
+            document.getElementById('exitButton').classList.remove('hidden'); // Показываем кнопку для выхода в главное меню
+            drawCard(); // Попытка вытянуть карту
+        }
+
+        function drawCard() {
+            const rand = Math.random();
+            let drawnCard = null;
+
+            if (rand < 0.001) drawnCard = 'Туз';
+            else if (rand < 0.01) drawnCard = 'Король';
+            else if (rand < 0.03) drawnCard = 'Дама';
+            else if (rand < 0.05) drawnCard = 'Валет';
+
+            if (drawnCard) {
+                cards[drawnCard].count++; // Увеличиваем количество карты
+                updateDeckCount();
+                showRewardMessage(`Поздравляю! Вы получили ${drawnCard}!`);
+            }
+        }
+
+        function showRewardMessage(message) {
+            const rewardMessageDiv = document.getElementById('rewardMessage');
+            rewardMessageDiv.innerText = message;
+            rewardMessageDiv.classList.remove('hidden');
+
+            setTimeout(() => {
+                rewardMessageDiv.classList.add('hidden'); // Скрыть сообщение через 5 секунд
+            }, 5000);
+        }
+
+        function cashOut() {
+            totalScore += currentTempScore; // Переносим временные монеты в основной баланс
+            document.getElementById('totalBalance').innerText = totalScore; // Обновляем основной баланс
+            currentTempScore = 0; // Обнуляем временные монеты
+            usedCells.clear(); // Сбрасываем использованные клетки
+            document.getElementById('cashOut').classList.add('hidden'); // Скрываем кнопку "Забрать"
+            resetGame(); // Сбрасываем игру для следующего раунда
+        }
+
+        function resetGame() {
+            document.getElementById('rewardMessage').classList.add('hidden'); // Скрываем сообщение о награде
+            renderGrid(); // Обновляем поле
+            clearInterval(timerInterval); // Останавливаем таймер
+            document.getElementById('freeAttempt').classList.add('hidden'); // Скрываем информацию о бесплатной попытке
+            toggleCellClickability(false); // Блокируем клики до начала игры
+            usedCells.clear(); // Сбрасываем использованные клетки для новой игры
+            updateDeckCount(); // Обновляем количество карт
+        }
+
+        function startTimer() {
+            let timeRemaining = 2 * 60; // Устанавливаем 2 минуты в секундах
+            timerInterval = setInterval(() => {
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                document.getElementById('attemptResetTimer').innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                timeRemaining--;
+
+                if (timeRemaining < 0) {
+                    clearInterval(timerInterval);
+                    if (attempts < 5) {
+                        attempts++; // Увеличиваем попытки
+                        document.getElementById('attempts').innerText = attempts; // Обновляем отображение
+                        alert("У вас новая бесплатная попытка!"); // Уведомление пользователю
+                    }
+                    startTimer(); // Перезапускаем таймер
+                }
+            }, 1000); // Обновляем каждую секунду
+        }
+
+        function updateMineCount(value) {
+            mineCount = value; // Обновляем значение пустых клеток
+            document.getElementById('mineCountDisplay').innerText = value; // Обновляем отображение значения ползунка
+        }
+
+        function showCardInfo(name, rarity, count, ability) {
+            document.getElementById('cardTitle').innerText = name;
+            document.getElementById('cardRarity').innerText = `Редкость: ${rarity}`;
+            document.getElementById('cardCountUpgrade').innerText = `Количество: ${count}`;
+            document.getElementById('cardAbility').innerText = ability;
+            document.getElementById('upgradeButton').style.display = 'block'; // Показываем кнопку улучшения
+            document.getElementById('cardInfoModal').style.display = 'flex'; // Показываем модальное окно информации о карте
+        }
+
+        function closeCardInfoModal() {
+            document.getElementById('cardInfoModal').style.display = 'none'; // Скрываем модальное окно информации о карте
+        }
+
+        function upgradeCard() {
+            const cardName = document.getElementById('cardTitle').innerText;
+            const card = cards[cardName];
+
+            if (totalScore >= card.upgradeCost) {
+                totalScore -= card.upgradeCost; // Снимаем стоимость улучшения
+                card.level += 1; // Увеличиваем уровень карты
+                card.upgradeCost = Math.floor(card.upgradeCost * 1.5); // Увеличиваем стоимость улучшения
+                document.getElementById('totalBalance').innerText = totalScore; // Обновляем баланс
+                updateDeckCount(); // Обновляем количество карт
+            }
+        }
+
+        function showWelcomeModal() {
+            document.getElementById('welcomeModal').style.display = 'flex'; // Показываем модальное окно для новых игроков
+        }
+
+        function closeWelcomeModal() {
+            document.getElementById('welcomeModal').style.display = 'none'; // Скрываем модальное окно для новых игроков
+        }
+
+        window.onload = function() {
+            document.getElementById('totalBalance').innerText = totalScore; // Устанавливаем начальный баланс
+            document.getElementById('diamondBalance').innerText = diamondCount; // Устанавливаем начальное количество бриллиантов
+            document.getElementById('attempts').innerText = attempts; // Устанавливаем начальное количество попыток
+            document.getElementById('cashOutAmount').innerText = 0; // Обнуляем временный баланс
+            document.getElementById('mineCountDisplay').innerText = mineCount; // Отображаем текущее количество пустых клеток
+
+            // Показываем приветственное окно для новых игроков
+            if (!localStorage.getItem('hasPlayedBefore')) {
+                showWelcomeModal();
+                localStorage.setItem('hasPlayedBefore', 'true');
+            }
+        };
+    </script>
 </body>
 </html>
