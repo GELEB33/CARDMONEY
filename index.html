@@ -864,10 +864,9 @@
             <h3 style="display: flex; align-items: center; justify-content: center;">
                 <span>Попытки:</span>
                 <span id="attempts">5</span>
-                <button class="add-button" style="width: 20px; height: 20px; font-size: 16px; margin-left: 5px; margin-right: 5px; transform: scale(1.25);" onclick="openAdModal()">+</button>
             </h3>
             <h2>Угадайте, где спрятаны монеты!</h2>
-            <h3 id="freeAttempt" class="hidden">Бесплатная попытка: <span id="attemptResetTimer">02:00</span></h3>
+            <h3 id="freeAttempt" class="hidden">Бесплатная попытка: <span id="attemptResetTimer">01:00</span></h3>
         </div>
         <div id="grid"></div>
         <div class="mine-count-container">
@@ -875,7 +874,7 @@
             <span id="mineCountDisplay" class="mine-count-value">3</span>
             <input type="range" min="3" max="24" value="3" class="mine-count-slider" oninput="updateMineCount(this.value)">
         </div>
-        <button id="confirmMineCount" onclick="confirmMineCount()">Подтвердить</button>
+        <button id="confirmMineCount" onclick="confirmMineCount()" class="hidden">Подтвердить</button>
         <div class="button-container">
             <button id="startButton" onclick="startGame()">Начать игру</button>
             <button id="cashOut" onclick="cashOut()" class="hidden">Забрать <span id="cashOutAmount">0</span> монет</button>
@@ -936,7 +935,7 @@
             document.getElementById('rewardMessage').innerText = '';
             toggleCellClickability(false);
             gameInProgress = false;
-            startFreeAttemptTimer();
+            startAttemptTimer();
         }
 
         function exitGame() {
@@ -944,6 +943,7 @@
             resetGame();
             document.querySelector('.menu-container').style.display = 'flex';
             document.querySelector('.header').style.display = 'block';
+            clearInterval(timerInterval);
         }
 
         function openAdModal() {
@@ -1037,7 +1037,6 @@
             attempts--;
             document.getElementById('attempts').innerText = attempts;
             document.getElementById('freeAttempt').classList.remove('hidden');
-            startTimer();
             toggleCellClickability(true);
             gameInProgress = true;
             saveGameState();
@@ -1173,35 +1172,14 @@
         function resetGame() {
             document.getElementById('rewardMessage').classList.add('hidden');
             renderGrid();
-            clearInterval(timerInterval);
             document.getElementById('freeAttempt').classList.add('hidden');
             toggleCellClickability(false);
             usedCells.clear();
             updateDeckCount();
         }
 
-        function startTimer() {
-            let timeRemaining = 2 * 60;
-            timerInterval = setInterval(() => {
-                const minutes = Math.floor(timeRemaining / 60);
-                const seconds = timeRemaining % 60;
-                document.getElementById('attemptResetTimer').innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                timeRemaining--;
-
-                if (timeRemaining < 0) {
-                    clearInterval(timerInterval);
-                    if (attempts < 5) {
-                        attempts++;
-                        document.getElementById('attempts').innerText = attempts;
-                        alert("У вас новая бесплатная попытка!");
-                    }
-                    startTimer();
-                }
-            }, 1000);
-        }
-
-        function startFreeAttemptTimer() {
-            let timeRemaining = 2 * 60;
+        function startAttemptTimer() {
+            let timeRemaining = 60;
             timerInterval = setInterval(() => {
                 const minutes = Math.floor(timeRemaining / 60);
                 const seconds = timeRemaining % 60;
@@ -1212,8 +1190,8 @@
                     clearInterval(timerInterval);
                     attempts++;
                     document.getElementById('attempts').innerText = attempts;
-                    alert("У вас новая бесплатная попытка!");
-                    startFreeAttemptTimer();
+                    saveGameState();
+                    startAttemptTimer();
                 }
             }, 1000);
         }
@@ -1222,6 +1200,7 @@
             mineCount = value;
             document.getElementById('mineCountDisplay').innerText = value;
             saveGameState();
+            confirmMineCount();
         }
 
         function confirmMineCount() {
@@ -1536,7 +1515,6 @@
             }
 
             updateQuestProgress();
-            startFreeAttemptTimer();
         };
 
         window.onbeforeunload = function() {
